@@ -9,6 +9,7 @@ struct PermissionMenu: View {
     /// The remote Claude default; nil while unknown, and then every choice is stored explicitly.
     let remoteMode: String?
     @State private var error = ""
+    @State private var saving = false
 
     struct Mode { let id, title, detail, symbol: String }
     static let modes = [
@@ -27,8 +28,10 @@ struct PermissionMenu: View {
 
     var body: some View {
         let current = Self.effective(model.active, remote: remoteMode)
+        // A server default with no row of its own still needs a way back to inheriting it.
+        let unlisted = remoteMode.flatMap { remote in Self.modes.contains { $0.id == remote } ? nil : Mode(id: remote, title: Self.label(remote), detail: "远端默认", symbol: "server.rack") }
         VStack(alignment: .leading, spacing: 2) {
-            ForEach(Self.modes, id: \.id) { mode in
+            ForEach((unlisted.map { [$0] } ?? []) + Self.modes, id: \.id) { mode in
                 Button { choose(mode.id) } label: {
                     HStack(alignment: .firstTextBaseline, spacing: 10) {
                         Image(systemName: mode.symbol).font(.system(size: 13)).frame(width: 18)
@@ -45,7 +48,7 @@ struct PermissionMenu: View {
                     .foregroundStyle(mode.id == "bypassPermissions" ? Self.danger : WorkbenchTheme.ink)
                     .padding(.horizontal, 10).padding(.vertical, 7).contentShape(Rectangle())
                 }
-                .buttonStyle(PermissionRowStyle()).focusEffectDisabled()
+                .buttonStyle(PermissionRowStyle()).focusEffectDisabled().disabled(saving)
             }
             if !error.isEmpty { Text(error).font(.caption).foregroundStyle(WorkbenchTheme.error).padding(.horizontal, 10).padding(.vertical, 4) }
         }
@@ -53,14 +56,16 @@ struct PermissionMenu: View {
     }
 
     private func choose(_ id: String) {
-        guard let engine = model.engine, let session = model.active else { return }
+        guard !saving, let engine = model.engine, let session = model.active else { return }
         var next = session.preferences ?? Preferences()
         next.permissionMode = id == remoteMode ? nil : id
         guard next.permissionMode != session.preferences?.permissionMode else { model.showPreferences = false; return }
         error = ""
+        saving = true
         Task {
             do { try await engine.configure(session.id, next); model.showPreferences = false }
             catch { self.error = error.localizedDescription }
+            saving = false
         }
     }
 }

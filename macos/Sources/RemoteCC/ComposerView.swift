@@ -281,8 +281,9 @@ struct ComposerArea: View {
         }
     }
 
-    private func loadRemoteMode() async {
-        remoteMode = nil
+    /// `refresh` keeps the known default while rereading it, so a fast pick right after opening the menu still stores only a diff.
+    private func loadRemoteMode(refresh: Bool = false) async {
+        if !refresh { remoteMode = nil }
         guard model.isConnected, let engine = model.engine, let session = model.active,
               let reply = try? await engine.agents.call(session.config, "file", ["operation": "claudeDefaults", "directory": .string(session.directory)], timeout: 10)
         else { return }
@@ -327,6 +328,7 @@ struct ComposerArea: View {
 
         }
         .task(id: "\(model.active?.id ?? "")|\(model.isConnected)") { await loadRemoteMode() }
+        .task(id: model.showPreferences) { if model.showPreferences { await loadRemoteMode(refresh: true) } }
     }
 
     private func send(steer: Bool = false) {
