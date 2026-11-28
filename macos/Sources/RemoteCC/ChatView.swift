@@ -83,28 +83,32 @@ struct WelcomeView: View {
     @EnvironmentObject private var model: AppModel
 
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer(minLength: 56)
-            VStack(spacing: 30) {
-                VStack(spacing: 12) {
-                    BrandIcon(size: 46)
-                    Text("今天，想完成什么？")
-                        .font(.system(size: 28, weight: .semibold))
-                    Text("连接远端项目，把重复工作交给 Claude。")
-                        .font(.callout).foregroundStyle(WorkbenchTheme.inkMuted)
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: 0) {
+                    Spacer(minLength: 56)
+                    VStack(spacing: 30) {
+                        VStack(spacing: 12) {
+                            BrandIcon(size: 46)
+                            Text("今天，想完成什么？")
+                                .font(.system(size: 28, weight: .semibold))
+                            Text("连接远端项目，把重复工作交给 Claude。")
+                                .font(.callout).foregroundStyle(WorkbenchTheme.inkMuted)
+                        }
+                        ViewThatFits(in: .horizontal) {
+                            HStack(spacing: 10) { suggestionButtons }
+                            VStack(spacing: 10) { suggestionButtons }
+                        }
+                        .opacity((model.drafts[model.activeId ?? "welcome"] ?? "").isEmpty ? 1 : 0)
+                        .disabled(!(model.drafts[model.activeId ?? "welcome"] ?? "").isEmpty)
+                        .accessibilityHidden(!(model.drafts[model.activeId ?? "welcome"] ?? "").isEmpty)
+                    }
+                    .frame(maxWidth: 680).padding(.horizontal, 40)
+                    Spacer(minLength: 96)
                 }
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 10) { suggestionButtons }
-                    VStack(spacing: 10) { suggestionButtons }
-                }
-                .opacity((model.drafts[model.activeId ?? "welcome"] ?? "").isEmpty ? 1 : 0)
-                .disabled(!(model.drafts[model.activeId ?? "welcome"] ?? "").isEmpty)
-                .accessibilityHidden(!(model.drafts[model.activeId ?? "welcome"] ?? "").isEmpty)
+                .frame(maxWidth: .infinity, minHeight: geometry.size.height)
             }
-            .frame(maxWidth: 680).padding(.horizontal, 40)
-            Spacer(minLength: 96)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     @ViewBuilder private var suggestionButtons: some View {
