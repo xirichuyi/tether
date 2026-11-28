@@ -1,3 +1,4 @@
+import ImageIO
 #if canImport(SwiftUI)
 import SwiftUI
 import AppKit
@@ -110,6 +111,7 @@ final class AppModel: ObservableObject {
     }
 
     @Published var composerFocus = UUID()
+    @Published var permissionMenuOpen = false
     @Published var sessionToolsSection = "skills"
     private var transcriptViewports: [String: TranscriptViewport] = [:]
     func transcriptViewport(for id: String) -> TranscriptViewport {
@@ -129,6 +131,8 @@ final class AppModel: ObservableObject {
     }
     @Published var drafts: [String: String] = [:]
     @Published var attachments: [String: [Attachment]] = [:]
+    var localImages: [String: NSImage] = [:]
+    private var localImageOrder: [String] = []
     /// Diff line comments per conversation, waiting to be sent to it together.
     @Published var reviewComments: [String: [ReviewComment]] = [:]
     var activeReviewComments: [ReviewComment] { activeId.flatMap { reviewComments[$0] } ?? [] }
@@ -1129,6 +1133,9 @@ final class AppModel: ObservableObject {
                 guard total > 1, let self else { return }
                 await MainActor.run { self.batchUploadProgress[session.id] = "正在上传 · \(completed)/\(total) 个文件已处理" }
             }
+            let images = results.compactMap { result in result.attachment.flatMap { ChatAttachmentView.isImage($0.name) ? ($0.path, result.file) : nil } }
+            let thumbnails = await Task.detached(priority: .userInitiated) { images.compactMap { path, url in AppModel.thumbnail(url).map { (path, $0) } } }.value
+            for (path, image) in thumbnails { self.rememberImage(image, for: path) }
             for result in results {
                 let url = result.file
                 if let attachment = result.attachment {
@@ -1214,6 +1221,19 @@ final class AppModel: ObservableObject {
         panel.canChooseDirectories = false
         guard panel.runModal() == .OK else { return }
         upload(panel.urls, to: directory)
+    }
+
+    nonisolated static func thumbnail(_ url: URL) -> CGImage? {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+        let options = [kCGImageSourceCreateThumbnailFromImageAlways: true, kCGImageSourceCreateThumbnailWithTransform: true, kCGImageSourceThumbnailMaxPixelSize: 480] as CFDictionary
+        return CGImageSourceCreateThumbnailAtIndex(source, 0, options)
+    }
+
+    private func rememberImage(_ image: CGImage, for path: String) {
+        localImages[path] = NSImage(cgImage: image, size: NSSize(width: image.width / 2, height: image.height / 2))
+        localImageOrder.removeAll { $0 == path }
+        localImageOrder.append(path)
+        while localImageOrder.count > 24 { localImages[localImageOrder.removeFirst()] = nil }
     }
 
     func pasteImage(_ data: Data) {

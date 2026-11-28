@@ -127,7 +127,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             case "account": self?.model?.presentation = .account
             case "activity": self?.model?.presentation = .activity
             case "account-usage": self?.model?.presentation = .accountUsage
-            case "preferences": self?.model?.presentation = .preferences
+            case "preferences": self?.model?.showPreferences = true
             case "projects": self?.model?.presentation = .projectPicker
             case "worktree": self?.model?.presentation = .worktree
             case "remote-setup": self?.model?.presentation = .remoteSetup(DemoData.config)

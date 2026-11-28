@@ -147,7 +147,7 @@
                 Text("当前对话").font(.headline)
                 if let session = model.active {
                     Text(historyDisplayTitle(session.name)).lineLimit(2).foregroundStyle(WorkbenchTheme.inkMuted)
-                    Button("模型与权限") {
+                    Button("权限") {
                         dismiss()
                         model.showPreferences = true
                     }

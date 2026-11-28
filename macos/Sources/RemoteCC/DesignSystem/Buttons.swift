@@ -34,17 +34,15 @@ struct ComposerActionStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.body.weight(.semibold))
+            .font(.system(size: 12, weight: .semibold))
             .foregroundStyle(enabled ? WorkbenchTheme.onInk : WorkbenchTheme.inkDim)
-            .frame(width: 28, height: 28)
-            .background(
-                enabled ? WorkbenchTheme.primaryButton : WorkbenchTheme.hover,
-                in: RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.large)
-            )
+            .frame(width: 26, height: 26)
+            .background(enabled ? WorkbenchTheme.primaryButton : WorkbenchTheme.hover, in: Circle())
             .opacity(configuration.isPressed ? 0.7 : 1)
     }
 }
 
+/// Compact text buttons: a hairline outline for secondary actions, a solid fill only for the primary one.
 struct WorkbenchButtonStyle: ButtonStyle {
     var prominent = false
     func makeBody(configuration: Configuration) -> some View {
@@ -58,25 +56,28 @@ private struct WorkbenchButtonBody: View {
     @Environment(\.isEnabled) private var enabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var hovered = false
+    private var destructive: Bool { configuration.role == .destructive }
     var body: some View {
         configuration.label
-            .font(WorkbenchMetrics.ui)
-            .padding(.horizontal, 10).frame(minHeight: WorkbenchMetrics.button)
+            .font(.system(size: 12, weight: prominent ? .medium : .regular))
+            .lineLimit(1)
+            .padding(.horizontal, 10).frame(minHeight: WorkbenchMetrics.compactButton)
             .foregroundStyle(
-                prominent
-                    ? WorkbenchTheme.onInk
-                    : configuration.role == .destructive ? WorkbenchTheme.error : WorkbenchTheme.ink
+                prominent ? WorkbenchTheme.onInk
+                    : destructive ? WorkbenchTheme.error
+                    : hovered && enabled ? WorkbenchTheme.ink : WorkbenchTheme.inkMuted
             )
             .background(
                 prominent
-                    ? (configuration.role == .destructive ? WorkbenchTheme.error : WorkbenchTheme.primaryButton)
-                    : hovered && enabled ? WorkbenchTheme.hover : WorkbenchTheme.surface,
-                in: RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.medium)
+                    ? (destructive ? WorkbenchTheme.error : WorkbenchTheme.primaryButton)
+                    : hovered && enabled ? WorkbenchTheme.hover : .clear,
+                in: RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.small)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.medium).strokeBorder(
-                    prominent ? .clear : WorkbenchTheme.border)
+                RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.small)
+                    .strokeBorder(prominent || hovered ? .clear : WorkbenchTheme.border)
             )
+            .contentShape(RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.small))
             .opacity(!enabled ? 0.4 : configuration.isPressed ? 0.72 : 1)
             .onHover { hovered = $0 }
             .animation(Motion.animation(Motion.hover, reduce: reduceMotion), value: hovered)
@@ -85,7 +86,7 @@ private struct WorkbenchButtonBody: View {
 
 /// Quiet actions retain a consistent hit area without a permanent button border.
 struct QuietButtonStyle: ButtonStyle {
-    var height: CGFloat = WorkbenchMetrics.button
+    var height: CGFloat = WorkbenchMetrics.compactButton
     func makeBody(configuration: Configuration) -> some View {
         QuietButtonBody(configuration: configuration, height: height)
     }
@@ -97,7 +98,7 @@ private struct QuietButtonBody: View {
     @State private var hovered = false
     var body: some View {
         configuration.label
-            .font(WorkbenchMetrics.ui)
+            .font(WorkbenchMetrics.caption)
             .padding(.horizontal, 6).frame(minHeight: height)
             .contentShape(RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.small))
             .background(

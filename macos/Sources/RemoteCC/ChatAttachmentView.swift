@@ -10,30 +10,58 @@ struct ChatAttachmentView: View {
     @State private var loading = false
     @State private var loadTask: Task<Void, Never>?
     @State private var error = ""
-    private var imageFile: Bool { ["png", "jpg", "jpeg", "gif", "webp", "heic"].contains((file.name as NSString).pathExtension.lowercased()) }
+    static func isImage(_ name: String) -> Bool { ["png", "jpg", "jpeg", "gif", "webp", "heic"].contains((name as NSString).pathExtension.lowercased()) }
+    private var imageFile: Bool { Self.isImage(file.name) }
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if let thumbnail { Image(nsImage: thumbnail).resizable().scaledToFit().frame(maxWidth: 280, maxHeight: 180).clipShape(RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.small)) }
-            HStack(spacing: 8) {
-                Image(systemName: imageFile ? "photo" : "doc.text")
-                    .font(.system(size: 18)).foregroundStyle(WorkbenchTheme.accent)
-                    .frame(width: 36, height: 36).background(WorkbenchTheme.sidebar, in: RoundedRectangle(cornerRadius: 8))
-                Text(file.name).lineLimit(1)
-                Text(ByteCountFormatter.string(fromByteCount: Int64(file.size), countStyle: .file)).foregroundStyle(WorkbenchTheme.inkMuted)
-            }.font(.caption)
-            HStack {
-                Button("打开") { model.open(file.path) }
-                Button("下载") { model.download(file.path) }
-                if imageFile && thumbnail == nil && !error.isEmpty { Button("重试") { load() }.disabled(loading) }
-                if loading { ProgressView().controlSize(.mini) }
-            }.font(.caption).buttonStyle(QuietButtonStyle()).disabled(!model.isConnected)
-            if !error.isEmpty { Text(error).font(.caption2).foregroundStyle(WorkbenchTheme.inkMuted).lineLimit(2) }
-        }.padding(12).background(WorkbenchTheme.surface, in: RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.medium))
-            .overlay(RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.medium).strokeBorder(WorkbenchTheme.border))
-            .task(id: model.isConnected) { if imageFile && thumbnail == nil && model.isConnected { load() } }
-            .onDisappear { loadTask?.cancel() }
+        Group {
+            if imageFile && (thumbnail != nil || error.isEmpty) { image } else { chip }
+        }
+        .contextMenu {
+            Button("打开") { model.open(file.path) }
+            Button("下载") { model.download(file.path) }
+        }
+        .task(id: model.isConnected) { if imageFile && thumbnail == nil && model.isConnected { load() } }
+        .onDisappear { loadTask?.cancel() }
     }
+
+    private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.card) }
+
+    private var image: some View {
+        Button { model.open(file.path) } label: {
+            Group {
+                if let thumbnail {
+                    Image(nsImage: thumbnail).resizable().scaledToFit()
+                } else {
+                    WorkbenchTheme.sidebar.frame(width: 200, height: 140)
+                        .overlay { Image(systemName: "photo").font(.system(size: 20)).foregroundStyle(WorkbenchTheme.inkMuted.opacity(loading ? 0.35 : 0.7)) }
+                }
+            }
+            .frame(maxWidth: 280, maxHeight: 200).clipShape(shape).overlay(shape.strokeBorder(WorkbenchTheme.border))
+        }
+        .buttonStyle(.plain).help(file.name).accessibilityLabel(file.name)
+    }
+
+    private var chip: some View {
+        HStack(spacing: 6) {
+            Button { model.open(file.path) } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: imageFile ? "photo" : "doc.text").foregroundStyle(WorkbenchTheme.accent)
+                    Text(file.name).lineLimit(1).truncationMode(.middle)
+                    Text(ByteCountFormatter.string(fromByteCount: Int64(file.size), countStyle: .file)).foregroundStyle(WorkbenchTheme.inkMuted)
+                }
+                .font(.caption).padding(.horizontal, 10).padding(.vertical, 7)
+                .background(WorkbenchTheme.surface, in: shape).overlay(shape.strokeBorder(WorkbenchTheme.border))
+            }
+            .buttonStyle(.plain).frame(maxWidth: 320).help(error.isEmpty ? file.name : error)
+            if !error.isEmpty {
+                Button { load() } label: { Image(systemName: "arrow.clockwise") }
+                    .buttonStyle(QuietButtonStyle()).help("重试").disabled(loading || !model.isConnected)
+            }
+        }
+    }
+
     private func load() {
+        if let image = model.localImages[file.path] { thumbnail = image; return }
         guard let session = model.active, let engine = model.engine else { return }
         loading = true; error = ""
         loadTask?.cancel()

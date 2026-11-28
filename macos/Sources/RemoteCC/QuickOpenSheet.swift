@@ -11,7 +11,7 @@ private enum PaletteCommand: String, CaseIterable, Identifiable {
         case .search: "在项目中搜索"
         case .settings: "打开设置"
         case .connect: "连接 SSH 主机"
-        case .preferences: "模型与会话设置"
+        case .preferences: "权限"
         }
     }
     var icon: String {
@@ -21,7 +21,7 @@ private enum PaletteCommand: String, CaseIterable, Identifiable {
         case .search: "doc.text.magnifyingglass"
         case .settings: "slider.horizontal.3"
         case .connect: "server.rack"
-        case .preferences: "cpu"
+        case .preferences: "hand.raised"
         }
     }
     var shortcut: String {
@@ -40,7 +40,7 @@ private enum PaletteCommand: String, CaseIterable, Identifiable {
         case .search: model.openPanel(.search)
         case .settings: model.presentation = .settings
         case .connect: model.presentation = .connect
-        case .preferences: model.presentation = .preferences
+        case .preferences: model.presentation = nil; model.showPreferences = true
         }
     }
 }

@@ -6,6 +6,7 @@ import RemoteCCCore
 
 struct ComposerArea: View {
     @EnvironmentObject private var model: AppModel
+    @State private var remoteMode: String?
     @State private var editorHeight: CGFloat = 32
     @State private var caret = 0
     @State private var selection = 0
@@ -73,7 +74,7 @@ struct ComposerArea: View {
             else if !mentions.isEmpty { mentionMenu }
             VStack(alignment: .leading, spacing: 6) {
                 attachmentChips
-                if model.uploadingSessions.contains(id) { ProgressView("正在上传附件…").controlSize(.small).font(.caption) }
+                if model.uploadingSessions.contains(id) { ProgressView().controlSize(.small) }
                 ForEach(model.failedUploads[id] ?? [], id: \.self) { url in
                     HStack {
                         Label(url.lastPathComponent + " 上传失败", systemImage: "exclamationmark.circle").lineLimit(1)
@@ -225,17 +226,35 @@ struct ComposerArea: View {
         }
     }
 
+    private func removeButton(_ file: Attachment) -> some View {
+        Button { model.attachments[id]?.removeAll { $0.path == file.path } } label: {
+            Image(systemName: "xmark.circle.fill").font(.system(size: 14)).symbolRenderingMode(.palette)
+                .foregroundStyle(.white, WorkbenchTheme.ink.opacity(0.7))
+        }
+        .buttonStyle(.plain).help("移除")
+    }
+
     @ViewBuilder private var attachmentChips: some View {
         if let files = model.attachments[id], !files.isEmpty {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack {
                     ForEach(files) { file in
-                        HStack(spacing: 5) {
-                            Button(file.name) { model.open(file.path) }.buttonStyle(.plain).help(file.path)
-                            Button { model.attachments[id]?.removeAll { $0.path == file.path } } label: { WorkbenchIcon(symbol: "xmark") }.buttonStyle(.plain).help("移除附件")
+                        if let image = model.localImages[file.path] {
+                            Button { model.open(file.path) } label: {
+                                Image(nsImage: image).resizable().scaledToFill().frame(width: 48, height: 48)
+                                    .clipShape(RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.small))
+                            }
+                            .buttonStyle(.plain).help(file.name)
+                            .overlay(alignment: .topTrailing) { removeButton(file).offset(x: 5, y: -5) }
+                            .padding(.top, 5).padding(.trailing, 5)
+                        } else {
+                            HStack(spacing: 5) {
+                                Button(file.name) { model.open(file.path) }.buttonStyle(.plain).lineLimit(1).truncationMode(.middle).help(file.path)
+                                removeButton(file)
+                            }
+                            .font(.caption).padding(.horizontal, 7).padding(.vertical, 4)
+                            .background(WorkbenchTheme.inkMuted.opacity(0.1), in: RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.small))
                         }
-                        .font(.caption).padding(.horizontal, 7).padding(.vertical, 4)
-                        .background(WorkbenchTheme.inkMuted.opacity(0.1), in: RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.small))
                     }
                 }
             }
@@ -280,14 +299,31 @@ struct ComposerArea: View {
         }
     }
 
+    /// `refresh` keeps the known default while rereading it, so a fast pick right after opening the menu still stores only a diff.
+    private func loadRemoteMode(refresh: Bool = false) async {
+        if !refresh { remoteMode = nil }
+        guard model.isConnected, let engine = model.engine, let session = model.active,
+              let reply = try? await engine.agents.call(session.config, "file", ["operation": "claudeDefaults", "directory": .string(session.directory)], timeout: 10)
+        else { return }
+        if case .string(let mode)? = reply["permissionMode"] { remoteMode = mode } else { remoteMode = "default" }
+    }
+
     private var sessionControls: some View {
         let session = model.active
-        let mode = session?.preferences?.permissionMode.flatMap { $0.isEmpty ? nil : $0 }
+        let mode = PermissionMenu.effective(session, remote: remoteMode)
         let busy = session?.isBusy ?? false
         return HStack(spacing: 4) {
             if session != nil {
-                Button { model.showPreferences = true } label: { Text(mode == nil ? "远端默认" : PreferencesSheet.label(mode)).font(.system(size: 11)).lineLimit(1) }
-                    .buttonStyle(QuietButtonStyle()).foregroundStyle(WorkbenchTheme.inkMuted).disabled(!model.isConnected)
+                Button { model.showPreferences.toggle() } label: {
+                    HStack(spacing: 3) {
+                        Text(PermissionMenu.label(mode)).lineLimit(1)
+                        Image(systemName: "chevron.down").font(.system(size: 8, weight: .semibold))
+                    }
+                    .font(.system(size: 11))
+                }
+                .buttonStyle(QuietButtonStyle()).foregroundStyle(mode == "bypassPermissions" ? PermissionMenu.danger : WorkbenchTheme.inkMuted)
+                .disabled(!model.isConnected).help("权限")
+                .popover(isPresented: $model.showPreferences, arrowEdge: .top) { PermissionMenu(remoteMode: remoteMode) }
                 Spacer(minLength: 2)
             }
             if session == nil { Spacer() }
@@ -295,10 +331,10 @@ struct ComposerArea: View {
                 contextMeter(session)
                 if busy && canSend {
                     Button { send(steer: true) } label: { WorkbenchIcon(symbol: "arrow.turn.right.up") }
-                        .buttonStyle(ComposerActionStyle())
+                        .buttonStyle(WorkbenchIconButtonStyle(size: 28))
                         .help("立即发送 · ⌘ Enter").accessibilityLabel("立即发送")
                     Button { send() } label: { WorkbenchIcon(symbol: "text.badge.plus") }
-                        .buttonStyle(ComposerActionStyle())
+                        .buttonStyle(WorkbenchIconButtonStyle(size: 28))
                         .help("加入队列 · Enter · 回复完成后发送").accessibilityLabel("加入队列")
                 }
                 // Esc is this button's key equivalent, so it stops the reply wherever the focus is.
@@ -313,6 +349,8 @@ struct ComposerArea: View {
             }
 
         }
+        .task(id: "\(model.active?.id ?? "")|\(model.isConnected)") { await loadRemoteMode() }
+        .task(id: model.showPreferences) { if model.showPreferences { await loadRemoteMode(refresh: true) } }
     }
 
     private func send(steer: Bool = false) {

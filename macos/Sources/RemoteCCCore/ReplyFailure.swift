@@ -18,7 +18,8 @@ public struct ReplyFailure: Sendable {
     public var summary: String {
         if isSafetyBlock { return "Claude 拒绝了本次请求" }
         if isQuotaProtection { return "已触发额度保护" }
-        return raw.components(separatedBy: .newlines).first(where: { !$0.trimmingCharacters(in: .whitespaces).isEmpty }) ?? "查看详情"
+        guard let line = raw.components(separatedBy: .newlines).first(where: { !$0.trimmingCharacters(in: .whitespaces).isEmpty }) else { return "查看详情" }
+        return line.range(of: #"^\s*\[[A-Za-z_]+\]"#, options: .regularExpression) == nil ? line : "回复意外中断"
     }
     public func duplicates(_ block: Block) -> Bool {
         guard ["text", "notice"].contains(block.type), let text = block.text else { return false }

@@ -406,6 +406,8 @@ struct MessageRow: View, Equatable {
             if let error = message.error {
                 ReplyFailureView(error: error, canEdit: model?.active?.isBusy != true, edit: restoreRequest)
             }
+            let footer = MessageFooter(message: message, model: model)
+            if busy ? message.error == nil && !hasInlineProgress : message.interrupted == true || footer.hasContent {
             ZStack(alignment: .leading) {
                 if busy && message.error == nil && !hasInlineProgress {
                     HStack(spacing: 8) {
@@ -416,10 +418,11 @@ struct MessageRow: View, Equatable {
                 } else if !busy {
                     HStack(spacing: 8) {
                         if message.interrupted == true { Text("已停止").font(.caption).foregroundStyle(WorkbenchTheme.inkMuted) }
-                        MessageFooter(message: message, model: model)
+                        footer
                     }
                 }
             }.frame(height: 28, alignment: .leading)
+            }
 
         }
     }
@@ -463,11 +466,14 @@ private struct MessageFooter: View {
     let model: AppModel?
     @State private var copied = false
 
+    var hasContent: Bool { !text.isEmpty || !parts.isEmpty || message.checkpointId != nil }
+    private var text: String { (message.blocks ?? []).filter { $0.type == "text" && !isDuplicateError($0) }.compactMap(\.text).joined(separator: "\n\n") }
+    private var isUsageReport: Bool { (message.blocks ?? []).contains { UsageReport($0.text ?? "") != nil } }
+    private var parts: [String] { isUsageReport ? [] : [message.model, message.durationMs.map { Duration.milliseconds(Int64($0)).formatted(.units(allowed: [.hours, .minutes, .seconds], width: .narrow, maximumUnitCount: 2)) }, message.costUSD.map { String(format: "$%.2f", $0) }].compactMap { $0 } }
+
     @ViewBuilder var body: some View {
-        let text = (message.blocks ?? []).filter { $0.type == "text" && !isDuplicateError($0) }.compactMap(\.text).joined(separator: "\n\n")
-        let isUsageReport = (message.blocks ?? []).contains { UsageReport($0.text ?? "") != nil }
-        let parts = isUsageReport ? [] : [message.model, message.durationMs.map { String(format: "%.1fs", $0 / 1000) }, message.costUSD.map { String(format: "$%.4f", $0) }].compactMap { $0 }
-        if !text.isEmpty || !parts.isEmpty || message.checkpointId != nil {
+        let text = text
+        if hasContent {
             HStack(spacing: 10) {
                 if !text.isEmpty {
                     Button { copyToPasteboard(text); copied = true } label: {
