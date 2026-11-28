@@ -15,41 +15,43 @@
                     Circle().fill(model.isConnected ? WorkbenchTheme.sage : WorkbenchTheme.inkMuted.opacity(0.5)).frame(
                         width: 6, height: 6)
                     Text(model.currentConfig?.displayName ?? "选择机器")
-                        .font(.system(size: 13, weight: .semibold)).lineLimit(1).truncationMode(.middle)
+                        .font(.system(size: 13.5, weight: .semibold)).lineLimit(1).truncationMode(.middle)
                     WorkbenchIcon(symbol: "chevron.down").scaleEffect(0.7).frame(width: 12)
                         .foregroundStyle(WorkbenchTheme.inkMuted)
                 }
-                .padding(.horizontal, 2).frame(height: 28).contentShape(Rectangle())
-            }.buttonStyle(.plain).help("当前机器：" + (model.currentConfig?.displayName ?? "未连接") + " · 切换或添加机器")
-                .accessibilityLabel("切换主机")
-                .workbenchPopup(isPresented: $choosing) {
-                    VStack(alignment: .leading, spacing: 0) {
-                        ScrollView {
-                            VStack(spacing: 0) {
-                                ForEach(model.savedMachines, id: \.key) { machine in
-                                    machineRow(machine)
-                                }
+                .padding(.horizontal, 4).frame(height: 30).contentShape(Rectangle())
+            }
+            .buttonStyle(QuietButtonStyle(height: 30))
+            .help("当前机器：" + (model.currentConfig?.displayName ?? "未连接") + " · 切换或添加机器")
+            .accessibilityLabel("切换主机")
+            .workbenchPopup(isPresented: $choosing) {
+                VStack(alignment: .leading, spacing: 0) {
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            ForEach(model.savedMachines, id: \.key) { machine in
+                                machineRow(machine)
                             }
-                        }.frame(
-                            height: min(
-                                CGFloat(model.savedMachines.count) * WorkbenchMetrics.row, WorkbenchMetrics.row * 8))
-                        Rectangle().fill(WorkbenchTheme.separator).frame(height: 1).padding(.horizontal, 6).padding(
-                            .vertical, 5)
-                        Button {
-                            choosing = false
-                            model.showConnect = true
-                        } label: {
-                            Text("添加服务器…").frame(maxWidth: .infinity, alignment: .leading)
-                        }.buttonStyle(QuietButtonStyle(height: WorkbenchMetrics.row))
-                        Button {
-                            choosing = false
-                            model.showSettings = true
-                        } label: {
-                            Text("管理主机…")
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }.buttonStyle(QuietButtonStyle(height: WorkbenchMetrics.row))
-                    }.padding(5).frame(width: 190).workbenchPanel()
-                }
+                        }
+                    }.frame(
+                        height: min(
+                            CGFloat(model.savedMachines.count) * WorkbenchMetrics.row, WorkbenchMetrics.row * 8))
+                    Rectangle().fill(WorkbenchTheme.separator).frame(height: 1).padding(.horizontal, 6).padding(
+                        .vertical, 5)
+                    Button {
+                        choosing = false
+                        model.showConnect = true
+                    } label: {
+                        Text("添加服务器…").frame(maxWidth: .infinity, alignment: .leading)
+                    }.buttonStyle(QuietButtonStyle(height: WorkbenchMetrics.row))
+                    Button {
+                        choosing = false
+                        model.showSettings = true
+                    } label: {
+                        Text("管理主机…")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }.buttonStyle(QuietButtonStyle(height: WorkbenchMetrics.row))
+                }.padding(5).frame(width: 190).workbenchPanel()
+            }
         }
 
         private func machineRow(_ machine: ConnectionConfig) -> some View {

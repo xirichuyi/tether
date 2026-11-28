@@ -4,13 +4,13 @@ import SwiftUI
 // Adapted from Winc's theme.rs, view/dialog.rs, view/settings.rs and view/popup_menu.rs.
 // Apache-2.0; attribution and the upstream license are bundled in Resources/ThirdParty.
 enum WorkbenchMetrics {
-    static let row: CGFloat = 24
-    static let button: CGFloat = 28
-    static let header: CGFloat = 40
-    static let status: CGFloat = 26
-    static let dialogRadius: CGFloat = 12
-    static let ui = Font.system(size: 13)
-    static let caption = Font.system(size: 12)
+    static let row: CGFloat = 28
+    static let button: CGFloat = 30
+    static let header: CGFloat = 42
+    static let status: CGFloat = 28
+    static let dialogRadius: CGFloat = 16
+    static let ui = Font.system(size: 13.5)
+    static let caption = Font.system(size: 12.5)
     // Winc theme.rs: SETTINGS_HEADER / PAD / CONTROL_H and DIALOG_LABEL_GAP.
     // The label column is wider for Chinese server and permission names.
     static let formLabel: CGFloat = 72

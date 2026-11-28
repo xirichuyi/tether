@@ -28,6 +28,8 @@
 
         /// White on dark palettes, black on light ones; overlays are this colour at low opacity.
         var ink: NSColor { dark ? .white : .black }
+        /// Navigation is recessed between the window frame and the main canvas.
+        var sidebar: NSColor { mix(frame, card, dark ? 0.5 : 0.24) }
         /// Inputs, code blocks and grouped rows sit slightly off the card.
         var surface: NSColor { mix(ink, card, dark ? 0.035 : 0.03) }
         var border: NSColor { mix(ink, card, dark ? 0.07 : 0.09) }

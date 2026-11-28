@@ -43,7 +43,7 @@ struct ComposerArea: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             if !model.isConnected {
                 HStack(spacing: 8) {
                     Label(model.connectionState.status == .connecting ? "正在连接服务器…" : "未连接 · 草稿会保留", systemImage: "network.slash")
@@ -71,7 +71,7 @@ struct ComposerArea: View {
             }
             if !completions.isEmpty { commandMenu }
             else if !mentions.isEmpty { mentionMenu }
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 8) {
                 attachmentChips
                 if model.uploadingSessions.contains(id) { ProgressView("正在上传附件…").controlSize(.small).font(.caption) }
                 ForEach(model.failedUploads[id] ?? [], id: \.self) { url in
@@ -86,12 +86,16 @@ struct ComposerArea: View {
                     .frame(height: editorHeight)
                 toolbarRow
             }
-            .padding(.horizontal, 12).padding(.top, 10).padding(.bottom, 8)
+            .padding(.horizontal, 14).padding(.top, 12).padding(.bottom, 10)
             .background {
-                RoundedRectangle(cornerRadius: WorkbenchMetrics.dialogRadius)
-                    .fill(WorkbenchTheme.surface)
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(WorkbenchTheme.popup)
             }
-            .overlay(RoundedRectangle(cornerRadius: WorkbenchMetrics.dialogRadius).strokeBorder(dropTarget ? WorkbenchTheme.accent : WorkbenchTheme.border.opacity(0.6)))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(dropTarget ? WorkbenchTheme.accent : WorkbenchTheme.border.opacity(0.75))
+            )
+            .shadow(color: WorkbenchTheme.shadow.opacity(0.22), radius: 14, y: 5)
 
             .onDrop(of: [.fileURL], isTargeted: $dropTarget) { providers in
                 guard model.isConnected else { model.show("先连接服务器，再附加文件"); return false }
@@ -122,7 +126,7 @@ struct ComposerArea: View {
             }
 
         }
-        .padding(.horizontal, 24).padding(.bottom, 14).padding(.top, 8)
+        .padding(.horizontal, 28).padding(.bottom, 18).padding(.top, 10)
         .frame(maxWidth: WorkbenchTheme.conversationWidth)
         .frame(maxWidth: .infinity)
         .onChange(of: text.wrappedValue) { refreshMentions() }
@@ -244,8 +248,8 @@ struct ComposerArea: View {
 
     private var toolbarRow: some View {
         return ViewThatFits(in: .horizontal) {
-            HStack(spacing: 2) { composerTools; sessionControls }
-            VStack(alignment: .leading, spacing: 4) { composerTools; sessionControls }
+            HStack(spacing: 6) { composerTools; sessionControls }
+            VStack(alignment: .leading, spacing: 6) { composerTools; sessionControls }
         }
     }
 
@@ -284,14 +288,14 @@ struct ComposerArea: View {
         let session = model.active
         let mode = session?.preferences?.permissionMode.flatMap { $0.isEmpty ? nil : $0 }
         let busy = session?.isBusy ?? false
-        return HStack(spacing: 4) {
+        return HStack(spacing: 6) {
             if session != nil {
                 Button { model.showPreferences = true } label: { Text(mode == nil ? "远端默认" : PreferencesSheet.label(mode)).font(.system(size: 11)).lineLimit(1) }
                     .buttonStyle(QuietButtonStyle()).foregroundStyle(WorkbenchTheme.inkMuted).disabled(!model.isConnected)
                 Spacer(minLength: 2)
             }
             if session == nil { Spacer() }
-            HStack(spacing: 8) {
+            HStack(spacing: 10) {
                 contextMeter(session)
                 if busy && canSend {
                     Button { send(steer: true) } label: { WorkbenchIcon(symbol: "arrow.turn.right.up") }

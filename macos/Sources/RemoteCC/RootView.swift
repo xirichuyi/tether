@@ -5,8 +5,8 @@ import RemoteCCCore
 
 struct RootView: View {
     @EnvironmentObject private var model: AppModel
-    @AppStorage("workspace.sidebarWidth") private var savedSidebarWidth: Double = 240
-    @State private var sidebarWidth: Double = 240
+    @AppStorage("workspace.sidebarWidth") private var savedSidebarWidth: Double = 260
+    @State private var sidebarWidth: Double = 260
     @AppStorage(ThemeStore.modeKey) private var themeMode = ThemeStore.Mode.system.rawValue
     @AppStorage(ThemeStore.darkKey) private var darkTheme = ThemePalette.midnight.id
     @AppStorage(ThemeStore.lightKey) private var lightTheme = ThemePalette.daylight.id
@@ -67,7 +67,7 @@ struct RootView: View {
                             ZStack(alignment: .topLeading) {
                                 Color.clear.contentShape(Rectangle()).onTapGesture { closeSessionMenu() }
                                 SessionActionMenu(session: session, close: closeSessionMenu)
-                                    .offset(x: max(8, min(rect.maxX - 180, geometry.size.width - 188)), y: rect.maxY + 4)
+                                    .offset(x: max(8, min(rect.maxX - 196, geometry.size.width - 204)), y: rect.maxY + 4)
                             }
                         }
                     }
@@ -96,7 +96,7 @@ struct RootView: View {
             }
             #endif
         }
-        .onAppear { sidebarWidth = min(360, max(200, savedSidebarWidth)); ThemeStore.apply() }
+        .onAppear { sidebarWidth = min(380, max(220, savedSidebarWidth)); ThemeStore.apply() }
         .onChange(of: themeMode) { ThemeStore.apply() }
         // Palette changes keep the appearance, so force one redraw with the new colours.
         .id(darkTheme + ":" + lightTheme)

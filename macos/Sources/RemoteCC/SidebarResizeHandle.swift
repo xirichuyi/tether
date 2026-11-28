@@ -22,7 +22,7 @@ struct SidebarResizeHandle: View {
                 .onChanged { value in
                     if dragOrigin == nil { dragOrigin = width }
                     // Global coordinates stay stable while the divider itself moves.
-                    width = min(360, max(200, (dragOrigin ?? width) + value.translation.width)).rounded()
+                    width = min(380, max(220, (dragOrigin ?? width) + value.translation.width)).rounded()
                 }
                 .onEnded { _ in dragOrigin = nil; onCommit() })
             .onHover { inside in
@@ -39,8 +39,8 @@ struct SidebarResizeHandle: View {
             .accessibilityValue("\(Int(width)) 点")
             .accessibilityAdjustableAction { direction in
                 switch direction {
-                case .increment: width = min(360, width + 20)
-                case .decrement: width = max(200, width - 20)
+                case .increment: width = min(380, width + 20)
+                case .decrement: width = max(220, width - 20)
                 @unknown default: break
                 }
                 onCommit()

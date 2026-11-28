@@ -16,7 +16,7 @@ private struct SidebarNavigationBody: View {
     var body: some View {
         configuration.label
             .foregroundStyle(WorkbenchTheme.sidebarInk)
-            .padding(.horizontal, 8).padding(.vertical, 3).frame(minHeight: 26)
+            .padding(.horizontal, 9).padding(.vertical, 4).frame(minHeight: WorkbenchMetrics.row)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.small))
             .background(
@@ -29,6 +29,43 @@ private struct SidebarNavigationBody: View {
     }
 }
 
+/// A lightweight card action with visible hover and pressed feedback.
+struct WorkbenchCardButtonStyle: ButtonStyle {
+    var prominent = false
+    func makeBody(configuration: Configuration) -> some View {
+        WorkbenchCardButtonBody(configuration: configuration, prominent: prominent)
+    }
+}
+
+private struct WorkbenchCardButtonBody: View {
+    let configuration: ButtonStyleConfiguration
+    let prominent: Bool
+    @Environment(\.isEnabled) private var enabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var hovered = false
+
+    var body: some View {
+        configuration.label
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                prominent
+                    ? WorkbenchTheme.selected
+                    : hovered && enabled ? WorkbenchTheme.hover : WorkbenchTheme.surface.opacity(0.62),
+                in: RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.medium)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.medium).strokeBorder(
+                    prominent || (hovered && enabled)
+                        ? WorkbenchTheme.accent.opacity(prominent ? 0.28 : 0.2)
+                        : WorkbenchTheme.border.opacity(0.7)
+                )
+            )
+            .opacity(!enabled ? 0.45 : configuration.isPressed ? 0.78 : 1)
+            .onHover { hovered = $0 }
+            .animation(Motion.animation(Motion.hover, reduce: reduceMotion), value: hovered)
+    }
+}
+
 struct ComposerActionStyle: ButtonStyle {
     @Environment(\.isEnabled) private var enabled
 
@@ -36,7 +73,7 @@ struct ComposerActionStyle: ButtonStyle {
         configuration.label
             .font(.body.weight(.semibold))
             .foregroundStyle(enabled ? WorkbenchTheme.onInk : WorkbenchTheme.inkDim)
-            .frame(width: 28, height: 28)
+            .frame(width: 30, height: 30)
             .background(
                 enabled ? WorkbenchTheme.primaryButton : WorkbenchTheme.hover,
                 in: RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.large)
@@ -61,7 +98,7 @@ private struct WorkbenchButtonBody: View {
     var body: some View {
         configuration.label
             .font(WorkbenchMetrics.ui)
-            .padding(.horizontal, 10).frame(minHeight: WorkbenchMetrics.button)
+            .padding(.horizontal, 12).frame(minHeight: WorkbenchMetrics.button)
             .foregroundStyle(
                 prominent
                     ? WorkbenchTheme.onInk
@@ -98,7 +135,7 @@ private struct QuietButtonBody: View {
     var body: some View {
         configuration.label
             .font(WorkbenchMetrics.ui)
-            .padding(.horizontal, 6).frame(minHeight: height)
+            .padding(.horizontal, 7).frame(minHeight: height)
             .contentShape(RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.small))
             .background(
                 enabled

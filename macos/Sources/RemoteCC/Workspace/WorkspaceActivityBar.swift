@@ -20,8 +20,11 @@ struct WorkspaceSidebarTabs: View {
                 ) { model.openPanel(panel) }
             }
         }
-        .padding(2)
-        .background(WorkbenchTheme.ink.opacity(0.05), in: RoundedRectangle(cornerRadius: 7))
+        .padding(3)
+        .background(WorkbenchTheme.surface, in: RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.medium))
+        .overlay(
+            RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.medium).strokeBorder(WorkbenchTheme.border.opacity(0.45))
+        )
 
     }
 
@@ -71,7 +74,10 @@ struct WorkspaceStatusBar: View {
             AccountQuotaView(store: model.accountStore)
         }
         .font(.system(size: 12)).foregroundStyle(WorkbenchTheme.inkMuted)
-        .padding(.horizontal, 14).frame(height: 26)
+        .padding(.horizontal, 16).frame(height: WorkbenchMetrics.status)
         .background(WorkbenchTheme.frame)
+        .overlay(alignment: .top) {
+            Rectangle().fill(WorkbenchTheme.separator).frame(height: 1)
+        }
     }
 }

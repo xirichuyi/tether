@@ -22,7 +22,9 @@ struct WorkspaceTopBar: View {
             Button { sidebarVisible.toggle() } label: { WorkbenchIcon(symbol: "sidebar.left").frame(width: 18) }
                 .help("切换侧栏").accessibilityLabel("切换侧栏")
             Text(title)
-                .font(.system(size: 13, weight: .medium)).lineLimit(1).truncationMode(.middle).frame(maxWidth: 360, alignment: .leading)
+                .font(.system(size: 14, weight: .semibold))
+                .lineLimit(1).truncationMode(.middle)
+                .frame(maxWidth: 420, alignment: .leading)
                 .help(model.active?.directory ?? "")
             Spacer(minLength: 12)
             Button { model.terminalVisible.toggle() } label: { WorkbenchIcon(symbol: "terminal").frame(width: 18) }
@@ -31,12 +33,15 @@ struct WorkspaceTopBar: View {
                 .help("终端 ⌃`").accessibilityLabel("终端")
         }
         .buttonStyle(WorkbenchIconButtonStyle(size: 28)).font(WorkbenchMetrics.ui)
-        .padding(.horizontal, 10).frame(height: WorkbenchMetrics.header + 6)
+        .padding(.horizontal, 12).frame(height: WorkbenchMetrics.header + 6)
         .background(WorkbenchTheme.frame)
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(WorkbenchTheme.separator).frame(height: 1)
+        }
     }
 }
 
-// Winc popup_menu.rs: 24 pt rows, 9 pt separators, inset highlight and a check column.
+// Winc popup_menu.rs: compact rows, separators, inset highlight and a check column.
 struct SessionActionMenu: View {
     @EnvironmentObject private var model: AppModel
     let session: ChatSession
@@ -70,9 +75,9 @@ struct SessionActionMenu: View {
                 row(items[index], index: index)
             }
         }
-        .padding(.vertical, 5).frame(width: 180)
-        .background(WorkbenchTheme.popup, in: RoundedRectangle(cornerRadius: 8))
-        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(WorkbenchTheme.popupBorder))
+        .padding(.vertical, 5).frame(width: 196)
+        .background(WorkbenchTheme.popup, in: RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.medium))
+        .overlay(RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.medium).strokeBorder(WorkbenchTheme.popupBorder))
         .shadow(color: WorkbenchTheme.shadow, radius: 12, y: 4)
         .focusable().focusEffectDisabled().focused($focused)
         .task {
@@ -97,10 +102,10 @@ struct SessionActionMenu: View {
                 Text(item.title).font(WorkbenchMetrics.ui).lineLimit(1)
                 Spacer(minLength: 8)
             }
-            .padding(.horizontal, 6).frame(height: 24)
+            .padding(.horizontal, 7).frame(height: WorkbenchMetrics.row)
             .foregroundStyle(selected == index ? Color.white : WorkbenchTheme.ink)
             .opacity(item.enabled ? 1 : 0.4)
-            .background(selected == index ? WorkbenchTheme.accent : .clear, in: RoundedRectangle(cornerRadius: 4))
+            .background(selected == index ? WorkbenchTheme.accent : .clear, in: RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.small))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain).disabled(!item.enabled).focusable(false)

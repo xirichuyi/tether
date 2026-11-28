@@ -34,15 +34,29 @@ struct SidebarView: View {
             VStack(spacing: 0) {
                 HStack(spacing: 6) {
                     if searchExpanded {
-                        TextField("搜索对话", text: $model.searchText)
-                            .textFieldStyle(.plain).focused($searchFocused)
-                            .task { await Task.yield(); searchFocused = true }
-                            .onExitCommand { closeSearch() }
+                        HStack(spacing: 6) {
+                            WorkbenchIcon(symbol: "magnifyingglass").foregroundStyle(WorkbenchTheme.inkDim)
+                            TextField("搜索对话", text: $model.searchText)
+                                .textFieldStyle(.plain).focused($searchFocused)
+                                .task { await Task.yield(); searchFocused = true }
+                                .onExitCommand { closeSearch() }
+                        }
+                        .padding(.horizontal, 8).frame(height: 28)
+                        .background(
+                            WorkbenchTheme.surface,
+                            in: RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.small)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.small)
+                                .strokeBorder(WorkbenchTheme.border.opacity(0.65))
+                        )
                     } else {
-                        Text(model.showArchived ? "已归档" : "项目").font(.system(size: 13, weight: .semibold))
+                        Text(model.showArchived ? "已归档" : "项目")
+                            .font(.system(size: 12.5, weight: .semibold))
+                            .foregroundStyle(WorkbenchTheme.inkMuted)
                     }
                     Spacer(minLength: 0)
-                }.padding(.horizontal, 12).frame(height: 32)
+                }.padding(.horizontal, 12).frame(height: 38)
                 HStack(spacing: 2) {
                     Button { model.newConversation() } label: { WorkbenchIcon(symbol: "square.and.pencil") }
                         .help("新建对话（⌘N）").accessibilityLabel("新建对话").disabled(model.currentConfig == nil)
@@ -53,11 +67,11 @@ struct SidebarView: View {
                     Button { if searchExpanded { closeSearch() } else { searchExpanded = true } } label: {
                         WorkbenchIcon(symbol: searchExpanded ? "xmark" : "magnifyingglass")
                     }.help(searchExpanded ? "关闭搜索" : "搜索对话").accessibilityLabel(searchExpanded ? "关闭搜索" : "搜索对话")
-                }.buttonStyle(WorkbenchIconButtonStyle(size: 24))
-                    .padding(.horizontal, 8).frame(height: 28)
+                }.buttonStyle(WorkbenchIconButtonStyle(size: 26))
+                    .padding(.horizontal, 8).frame(height: 34)
             }
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 1) {
+                LazyVStack(alignment: .leading, spacing: 3) {
                 if !groups.isEmpty {
                     Section {
                         ForEach(Array(visibleGroups.enumerated()), id: \.element.key) { index, group in
@@ -70,7 +84,7 @@ struct SidebarView: View {
                         }
                     }
                 }
-                }.padding(.horizontal, 6).padding(.bottom, 8)
+                }.padding(.horizontal, 8).padding(.bottom, 10)
 
             }
             .id(model.currentConfig?.key ?? "no-machine")

@@ -13,7 +13,7 @@ enum WorkbenchTheme {
     /// Conversation and editor card.
     static let canvas = token(\.card)
     /// Sidebar and inspector cards.
-    static let sidebar = token(\.card)
+    static let sidebar = token(\.sidebar)
     static let popup = token(\.popup)
     /// Inputs, code blocks and grouped rows.
     static let surface = token(\.surface)
@@ -42,10 +42,10 @@ enum WorkbenchTheme {
 
     /// One spacing and corner scale for the whole app instead of per-view numbers.
     enum Space { static let xs: CGFloat = 4, s: CGFloat = 8, m: CGFloat = 12, l: CGFloat = 16, xl: CGFloat = 24 }
-    static let conversationWidth: CGFloat = 680
+    static let conversationWidth: CGFloat = 760
 
-    /// Rows 6, tabs and popups 8, cards 10, pill controls 14.
-    enum Radius { static let small: CGFloat = 6, medium: CGFloat = 8, card: CGFloat = 10, large: CGFloat = 14 }
-    /// Cards float on the frame: 6 pt from the window edge and from each other.
-    enum Island { static let margin: CGFloat = 6, gap: CGFloat = 6 }
+    /// Rows 7, tabs and popups 10, cards 14, pill controls 18.
+    enum Radius { static let small: CGFloat = 7, medium: CGFloat = 10, card: CGFloat = 14, large: CGFloat = 18 }
+    /// Cards float on the frame with enough separation for the workspace hierarchy to read at a glance.
+    enum Island { static let margin: CGFloat = 8, gap: CGFloat = 8 }
 }
