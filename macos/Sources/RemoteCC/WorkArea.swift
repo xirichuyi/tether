@@ -16,7 +16,7 @@ struct WorkArea: View {
         GeometryReader { geometry in
             let workspace = model.activeWorkspace
             let hasEditor = workspace?.activeTab != nil
-            let split = splitEditor && hasEditor && geometry.size.width >= 720
+            let split = splitEditor && hasEditor && geometry.size.width >= 640
             let chatVisible = split || model.showingChat || !hasEditor
             let minimum = min(0.5, 300 / max(1, geometry.size.width - 6))
             let fraction = min(1 - minimum, max(minimum, splitFraction))
@@ -32,7 +32,7 @@ struct WorkArea: View {
                         ChatView()
                     }
                     .background(WorkbenchTheme.canvas)
-                    .clipShape(RoundedRectangle(cornerRadius: split ? 10 : 0))
+                    .clipShape(RoundedRectangle(cornerRadius: split ? WorkbenchTheme.Radius.card : 0))
                     .paneVisible(chatVisible)
                     if let workspace {
                         EditorPane(workspace: workspace, showsTabs: split)
@@ -104,7 +104,7 @@ struct WorkArea: View {
         HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(model.active.map { historyDisplayTitle($0.name) } ?? "新对话")
-                    .font(.system(size: 13, weight: .semibold)).lineLimit(1)
+                    .font(.system(size: 14, weight: .semibold)).lineLimit(1)
                 if let session = model.active,
                    session.isBusy || session.runningBackgroundTaskCount > 0 || session.transportError != nil {
                     Button { model.showActivity = true } label: {
@@ -125,7 +125,10 @@ struct WorkArea: View {
                     .buttonStyle(WorkbenchIconButtonStyle()).help("收起代码面板").accessibilityLabel("收起代码面板")
             }
             sessionMenuButton
-        }.padding(.horizontal, 12).frame(height: 40)
+        }.padding(.horizontal, 14).frame(height: 44)
+            .overlay(alignment: .bottom) {
+                Rectangle().fill(WorkbenchTheme.separator).frame(height: 1)
+            }
     }
 
     @ViewBuilder private var sessionMenuButton: some View {
@@ -144,8 +147,11 @@ struct WorkArea: View {
                     Button { model.focusChat() } label: {
                         Label(model.active.map { historyDisplayTitle($0.name) } ?? "新对话", systemImage: "bubble.left")
                             .lineLimit(1).frame(maxWidth: 220)
-                            .padding(.horizontal, 9).frame(height: 26)
-                            .background(model.showingChat ? WorkbenchTheme.selected : .clear, in: RoundedRectangle(cornerRadius: 6))
+                            .padding(.horizontal, 10).frame(height: 28)
+                            .background(
+                                model.showingChat ? WorkbenchTheme.selected : .clear,
+                                in: RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.small)
+                            )
                     }.buttonStyle(.plain).help("显示对话")
                     if let workspace {
                         ForEach(workspace.tabs) { tab in
@@ -164,7 +170,10 @@ struct WorkArea: View {
                 .accessibilityLabel(splitEditor ? "切换为单栏" : "并排查看对话与文件")
                 .accessibilityAddTraits(splitEditor ? .isSelected : [])
             sessionMenuButton.padding(.trailing, 7)
-        }.frame(height: 40)
+        }.frame(height: 44)
+            .overlay(alignment: .bottom) {
+                Rectangle().fill(WorkbenchTheme.separator).frame(height: 1)
+            }
     }
 }
 

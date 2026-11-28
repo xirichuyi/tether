@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// A tree row that expands its children, like the reference sidebar: 24 pt, rotating chevron,
+/// A tree row that expands its children, like the reference sidebar: rotating chevron,
 /// hover fill; children appear with the tree animation. The label sees the hover state.
 struct SidebarDisclosure<Label: View, Content: View>: View {
     @Binding var expanded: Bool
@@ -21,7 +21,7 @@ struct SidebarDisclosure<Label: View, Content: View>: View {
                 .rotationEffect(.degrees(expanded ? 90 : 0)).frame(width: 12)
                 label(hovered)
             }
-            .padding(.horizontal, 6).frame(height: 24).frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 7).frame(height: WorkbenchMetrics.row).frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 hovered ? WorkbenchTheme.hover : .clear, in: RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.small)
             )

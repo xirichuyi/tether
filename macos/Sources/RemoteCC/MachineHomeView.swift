@@ -14,8 +14,8 @@ struct MachineHomeView: View {
                     GettingStartedView()
                 } else if let config = model.currentConfig {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("新对话").font(.system(size: 22, weight: .semibold)).foregroundStyle(WorkbenchTheme.ink)
-                        Text(config.displayName).font(.body).foregroundStyle(WorkbenchTheme.inkMuted).lineSpacing(6)
+                        Text("开始工作").font(.system(size: 26, weight: .semibold)).foregroundStyle(WorkbenchTheme.ink)
+                        Text(config.displayName).font(.callout).foregroundStyle(WorkbenchTheme.inkMuted).lineSpacing(4)
                     }
                     if !model.isConnected {
                         if model.connectionState.status == .error, !model.connectionState.error.isEmpty {
@@ -30,11 +30,17 @@ struct MachineHomeView: View {
                     }
                     MachineHealthBanner()
                     HStack(spacing: 10) {
-                        Button { model.perform { try await model.chooseProject("~") } } label: { Label("在主目录开始对话", systemImage: "house") }
-                            .buttonStyle(WorkbenchButtonStyle(prominent: model.isConnected && recent.isEmpty)).disabled(!model.isConnected)
-                        Button { model.openProjectPicker() } label: { Label("打开或新建项目", systemImage: "folder.badge.plus") }
-                            .buttonStyle(WorkbenchButtonStyle()).disabled(!model.isConnected)
+                        startAction(
+                            title: "在主目录开始", detail: "直接使用这台机器的主目录", icon: "house",
+                            prominent: model.isConnected && recent.isEmpty
+                        ) {
+                            model.perform { try await model.chooseProject("~") }
+                        }
+                        startAction(title: "打开项目", detail: "浏览或新建远端文件夹", icon: "folder.badge.plus") {
+                            model.openProjectPicker()
+                        }
                     }
+                    .disabled(!model.isConnected).opacity(model.isConnected ? 1 : 0.45)
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
                             Text("最近对话").font(.callout.weight(.medium)).foregroundStyle(WorkbenchTheme.inkMuted)
@@ -57,11 +63,11 @@ struct MachineHomeView: View {
                                 ForEach(recent) { session in
                                     Button { model.select(session.id) } label: {
                                         HStack(spacing: 10) {
-                                                                                        VStack(alignment: .leading, spacing: 5) {
+                                            VStack(alignment: .leading, spacing: 5) {
                                                 Text(historyDisplayTitle(session.name)).font(WorkbenchMetrics.ui).lineLimit(1)
                                                 Text(session.directory).font(WorkbenchMetrics.caption).foregroundStyle(WorkbenchTheme.inkMuted).lineLimit(1).truncationMode(.middle)
                                             }
-                                            Spacer()
+                                            Spacer(minLength: 12)
                                             Text(Date(timeIntervalSince1970: session.updatedAt / 1000), format: .dateTime.month().day())
                                                 .font(.caption2).foregroundStyle(WorkbenchTheme.inkDim)
                                             Image(systemName: "chevron.right").font(.caption2).foregroundStyle(WorkbenchTheme.inkDim)
@@ -78,6 +84,25 @@ struct MachineHomeView: View {
         }
     }
 
+    private func startAction(
+        title: String, detail: String, icon: String, prominent: Bool = false,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                WorkbenchIcon(symbol: icon).foregroundStyle(prominent ? WorkbenchTheme.accent : WorkbenchTheme.inkMuted)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(title).font(WorkbenchMetrics.ui.weight(.medium)).foregroundStyle(WorkbenchTheme.ink)
+                    Text(detail).font(WorkbenchMetrics.caption).foregroundStyle(WorkbenchTheme.inkMuted).lineLimit(1)
+                }
+                Spacer(minLength: 6)
+                Image(systemName: "chevron.right").font(.caption2).foregroundStyle(WorkbenchTheme.inkDim)
+            }
+            .padding(.horizontal, 12).padding(.vertical, 10)
+            .frame(maxWidth: .infinity, minHeight: 58, alignment: .leading)
+        }
+        .buttonStyle(WorkbenchCardButtonStyle(prominent: prominent))
+    }
 }
 
 /// First launch: a heading and the way to add a server.
@@ -86,14 +111,29 @@ struct GettingStartedView: View {
     static let helpURL = URL(string: "https://github.com/xirichuyi/tether/blob/HEAD/docs/getting-started.md")!
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            Text("开始使用").font(.system(size: 22, weight: .semibold)).foregroundStyle(WorkbenchTheme.ink)
+        VStack(alignment: .leading, spacing: 22) {
+            HStack(spacing: 14) {
+                BrandIcon(size: 46)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("欢迎使用 Tether")
+                        .font(.system(size: 26, weight: .semibold)).foregroundStyle(WorkbenchTheme.ink)
+                    Text("把 macOS 变成远端 Claude 项目的清晰工作台。")
+                        .font(.callout).foregroundStyle(WorkbenchTheme.inkMuted)
+                }
+            }
             HStack(spacing: 12) {
                 Button { model.showConnect = true } label: { Label("添加服务器", systemImage: "plus") }
                     .buttonStyle(WorkbenchButtonStyle(prominent: true))
                 Link("入门指南", destination: Self.helpURL).font(.callout)
-            }.padding(.top, 4)
+            }
         }
+        .padding(24)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(WorkbenchTheme.surface.opacity(0.5), in: RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.card))
+        .overlay(
+            RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.card)
+                .strokeBorder(WorkbenchTheme.border.opacity(0.7))
+        )
     }
 }
 #endif

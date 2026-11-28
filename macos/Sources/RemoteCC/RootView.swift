@@ -67,7 +67,7 @@ struct RootView: View {
                             ZStack(alignment: .topLeading) {
                                 Color.clear.contentShape(Rectangle()).onTapGesture { closeSessionMenu() }
                                 SessionActionMenu(session: session, close: closeSessionMenu)
-                                    .offset(x: max(8, min(rect.maxX - 180, geometry.size.width - 188)), y: rect.maxY + 4)
+                                    .offset(x: max(8, min(rect.maxX - 196, geometry.size.width - 204)), y: rect.maxY + 4)
                             }
                         }
                     }
@@ -96,7 +96,7 @@ struct RootView: View {
             }
             #endif
         }
-        .onAppear { sidebarWidth = min(360, max(200, savedSidebarWidth)); ThemeStore.apply() }
+        .onAppear { sidebarWidth = min(380, max(220, savedSidebarWidth)); ThemeStore.apply() }
         .onChange(of: themeMode) { ThemeStore.apply() }
         // Palette changes keep the appearance, so force one redraw with the new colours.
         .id(darkTheme + ":" + lightTheme)

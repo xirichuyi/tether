@@ -7,7 +7,7 @@ import MarkdownUI
 extension Theme {
     static let remoteCC = Theme()
         .text {
-            FontSize(13)
+            FontSize(14)
             ForegroundColor(WorkbenchTheme.ink)
             BackgroundColor(nil)
         }
@@ -27,7 +27,7 @@ extension Theme {
         .paragraph { configuration in
             configuration.label
                 .fixedSize(horizontal: false, vertical: true)
-                .relativeLineSpacing(.em(0.3))
+                .relativeLineSpacing(.em(0.36))
                 .markdownMargin(top: 0, bottom: 12)
         }
         .listItem { configuration in

@@ -11,6 +11,7 @@ struct IslandCard: ViewModifier {
             .overlay(
                 RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.card, style: .continuous).strokeBorder(
                     WorkbenchTheme.popupBorder))
+            .shadow(color: WorkbenchTheme.shadow.opacity(0.18), radius: 10, y: 3)
     }
 }
 
@@ -23,7 +24,9 @@ extension View {
     func workbenchDialogSurface() -> some View {
         self.background(WorkbenchTheme.popup)
             .clipShape(RoundedRectangle(cornerRadius: WorkbenchMetrics.dialogRadius))
-            .overlay(RoundedRectangle(cornerRadius: WorkbenchMetrics.dialogRadius).strokeBorder(WorkbenchTheme.popupBorder))
+            .overlay(
+                RoundedRectangle(cornerRadius: WorkbenchMetrics.dialogRadius).strokeBorder(WorkbenchTheme.popupBorder)
+            )
             .shadow(color: WorkbenchTheme.shadow, radius: 24, y: 10)
     }
 

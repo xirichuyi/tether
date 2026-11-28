@@ -83,36 +83,49 @@ struct WelcomeView: View {
     @EnvironmentObject private var model: AppModel
 
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer(minLength: 48)
-            VStack(spacing: 28) {
-                HStack(spacing: 12) {
-                    BrandIcon(size: 38)
-                    Text("今天，想完成什么？")
-                        .font(.title.weight(.medium))
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: 0) {
+                    Spacer(minLength: 56)
+                    VStack(spacing: 30) {
+                        VStack(spacing: 12) {
+                            BrandIcon(size: 46)
+                            Text("今天，想完成什么？")
+                                .font(.system(size: 28, weight: .semibold))
+                            Text("连接远端项目，把重复工作交给 Claude。")
+                                .font(.callout).foregroundStyle(WorkbenchTheme.inkMuted)
+                        }
+                        ViewThatFits(in: .horizontal) {
+                            HStack(spacing: 10) { suggestionButtons }
+                            VStack(spacing: 10) { suggestionButtons }
+                        }
+                        .opacity((model.drafts[model.activeId ?? "welcome"] ?? "").isEmpty ? 1 : 0)
+                        .disabled(!(model.drafts[model.activeId ?? "welcome"] ?? "").isEmpty)
+                        .accessibilityHidden(!(model.drafts[model.activeId ?? "welcome"] ?? "").isEmpty)
+                    }
+                    .frame(maxWidth: 680).padding(.horizontal, 40)
+                    Spacer(minLength: 96)
                 }
-                HStack(spacing: 8) {
-                    suggestion("了解项目", icon: "folder", prompt: "请梳理这个项目的目录结构、技术栈和主要入口。")
-                    suggestion("检查代码", icon: "text.magnifyingglass", prompt: "请检查当前项目，找出影响使用的问题并给出改进建议。")
-                    suggestion("实现功能", icon: "chevron.left.forwardslash.chevron.right", prompt: "我想实现一个新功能：")
-                }
-                .opacity((model.drafts[model.activeId ?? "welcome"] ?? "").isEmpty ? 1 : 0)
-                .disabled(!(model.drafts[model.activeId ?? "welcome"] ?? "").isEmpty)
-                .accessibilityHidden(!(model.drafts[model.activeId ?? "welcome"] ?? "").isEmpty)
+                .frame(maxWidth: .infinity, minHeight: geometry.size.height)
             }
-            .frame(maxWidth: 600).padding(.horizontal, 36)
-            Spacer(minLength: 80)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    @ViewBuilder private var suggestionButtons: some View {
+        suggestion("了解项目", icon: "folder", prompt: "请梳理这个项目的目录结构、技术栈和主要入口。")
+        suggestion("检查代码", icon: "text.magnifyingglass", prompt: "请检查当前项目，找出影响使用的问题并给出改进建议。")
+        suggestion("实现功能", icon: "chevron.left.forwardslash.chevron.right", prompt: "我想实现一个新功能：")
     }
 
     private func suggestion(_ title: String, icon: String, prompt: String) -> some View {
         Button { model.drafts[model.activeId ?? "welcome"] = prompt; model.composerFocus = UUID() } label: {
-            Label(title, systemImage: icon).font(.callout)
-                .padding(.horizontal, 12).padding(.vertical, 8)
-                .background(WorkbenchTheme.surface.opacity(0.65), in: RoundedRectangle(cornerRadius: 8))
-                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(WorkbenchTheme.border))
-        }.buttonStyle(.plain)
+            VStack(alignment: .leading, spacing: 10) {
+                WorkbenchIcon(symbol: icon).foregroundStyle(WorkbenchTheme.accent)
+                Text(title).font(.callout.weight(.medium)).foregroundStyle(WorkbenchTheme.ink)
+                Spacer(minLength: 0)
+            }
+            .padding(12).frame(width: 154, height: 78, alignment: .topLeading)
+        }.buttonStyle(WorkbenchCardButtonStyle())
     }
 }
 
@@ -147,7 +160,7 @@ struct MessagesList: View {
             ScrollView {
                 // This bounded window needs exact heights. Lazy estimates combined
                 // with bottom anchoring can repeatedly relayout long streaming replies.
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 16) {
                     if visibleRange.lowerBound > 0 {
                         Button("更早消息") {
                             followsReply = false
@@ -195,7 +208,7 @@ struct MessagesList: View {
                 }
                 .background(TranscriptViewportBridge(state: viewportState))
                 .environment(\.transcriptSelection, selection)
-                .padding(.horizontal, 24).padding(.vertical, 20)
+                .padding(.horizontal, 28).padding(.vertical, 24)
                 .frame(maxWidth: WorkbenchTheme.conversationWidth, alignment: .leading)
                 .frame(maxWidth: .infinity)
             }
@@ -372,9 +385,14 @@ struct MessageRow: View, Equatable {
     private var userBody: some View {
         VStack(alignment: .trailing, spacing: 6) {
             if let text = message.text, !text.isEmpty {
-            SelectableTranscriptText(text: text, markdown: false, scope: selection)
-                .padding(.horizontal, 12).padding(.vertical, 8)
-                .background(WorkbenchTheme.ink.opacity(0.045), in: RoundedRectangle(cornerRadius: 10))
+                SelectableTranscriptText(text: text, markdown: false, scope: selection)
+                    .padding(.horizontal, 13).padding(.vertical, 9)
+                    .background(WorkbenchTheme.userBubble, in: RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.card))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.card)
+                            .strokeBorder(WorkbenchTheme.accent.opacity(0.12))
+                    )
+                    .frame(maxWidth: 540, alignment: .trailing)
             }
             if let files = message.attachments {
                 ForEach(files) { file in
@@ -386,7 +404,7 @@ struct MessageRow: View, Equatable {
     }
 
     private var assistantBody: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             ForEach(Array((message.blocks ?? []).enumerated()).filter { !isDuplicateError($0.element) }, id: \.offset) { index, block in
                 let writing = busy && index == (message.blocks?.count ?? 0) - 1
                 BlockView(block: block, actions: actions, thinkingActive: writing && sessionStatus == "working")

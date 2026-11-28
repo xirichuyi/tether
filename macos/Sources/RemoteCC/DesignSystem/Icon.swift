@@ -254,9 +254,9 @@ private struct IconButtonBody: View {
     var body: some View {
         configuration.label
             .frame(width: size, height: size)
-            .foregroundStyle(selected ? WorkbenchTheme.ink : WorkbenchTheme.inkMuted)
+            .foregroundStyle(selected ? WorkbenchTheme.accent : WorkbenchTheme.inkMuted)
             .contentShape(Rectangle())
-            .background(background, in: RoundedRectangle(cornerRadius: 6))
+            .background(background, in: RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.small))
             .opacity(enabled ? 1 : 0.35)
             .onHover { hovered = $0 }
     }
