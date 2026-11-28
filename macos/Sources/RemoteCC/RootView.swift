@@ -5,8 +5,8 @@ import RemoteCCCore
 
 struct RootView: View {
     @EnvironmentObject private var model: AppModel
-    @AppStorage("workspace.sidebarWidth") private var savedSidebarWidth: Double = 260
-    @State private var sidebarWidth: Double = 260
+    @AppStorage("workspace.sidebarWidth") private var savedSidebarWidth: Double = 240
+    @State private var sidebarWidth: Double = 240
     @AppStorage(ThemeStore.modeKey) private var themeMode = ThemeStore.Mode.system.rawValue
     @AppStorage(ThemeStore.darkKey) private var darkTheme = ThemePalette.midnight.id
     @AppStorage(ThemeStore.lightKey) private var lightTheme = ThemePalette.daylight.id
