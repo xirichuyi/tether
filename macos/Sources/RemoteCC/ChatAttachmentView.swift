@@ -31,9 +31,8 @@ struct ChatAttachmentView: View {
                 if let thumbnail {
                     Image(nsImage: thumbnail).resizable().scaledToFit()
                 } else {
-                    WorkbenchTheme.sidebar.frame(width: 200, height: 140).overlay {
-                        if loading { ProgressView().controlSize(.small) } else { Image(systemName: "photo").foregroundStyle(WorkbenchTheme.inkMuted) }
-                    }
+                    WorkbenchTheme.sidebar.frame(width: 200, height: 140)
+                        .overlay { Image(systemName: "photo").font(.system(size: 20)).foregroundStyle(WorkbenchTheme.inkMuted.opacity(loading ? 0.35 : 0.7)) }
                 }
             }
             .frame(maxWidth: 280, maxHeight: 200).clipShape(shape).overlay(shape.strokeBorder(WorkbenchTheme.border))
