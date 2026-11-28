@@ -93,10 +93,9 @@ struct WelcomeView: View {
                     Text("连接远端项目，把重复工作交给 Claude。")
                         .font(.callout).foregroundStyle(WorkbenchTheme.inkMuted)
                 }
-                HStack(spacing: 10) {
-                    suggestion("了解项目", icon: "folder", prompt: "请梳理这个项目的目录结构、技术栈和主要入口。")
-                    suggestion("检查代码", icon: "text.magnifyingglass", prompt: "请检查当前项目，找出影响使用的问题并给出改进建议。")
-                    suggestion("实现功能", icon: "chevron.left.forwardslash.chevron.right", prompt: "我想实现一个新功能：")
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 10) { suggestionButtons }
+                    VStack(spacing: 10) { suggestionButtons }
                 }
                 .opacity((model.drafts[model.activeId ?? "welcome"] ?? "").isEmpty ? 1 : 0)
                 .disabled(!(model.drafts[model.activeId ?? "welcome"] ?? "").isEmpty)
@@ -106,6 +105,12 @@ struct WelcomeView: View {
             Spacer(minLength: 96)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    @ViewBuilder private var suggestionButtons: some View {
+        suggestion("了解项目", icon: "folder", prompt: "请梳理这个项目的目录结构、技术栈和主要入口。")
+        suggestion("检查代码", icon: "text.magnifyingglass", prompt: "请检查当前项目，找出影响使用的问题并给出改进建议。")
+        suggestion("实现功能", icon: "chevron.left.forwardslash.chevron.right", prompt: "我想实现一个新功能：")
     }
 
     private func suggestion(_ title: String, icon: String, prompt: String) -> some View {
