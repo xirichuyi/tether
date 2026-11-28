@@ -297,7 +297,11 @@ struct ComposerArea: View {
         return HStack(spacing: 4) {
             if session != nil {
                 Button { model.showPreferences.toggle() } label: {
-                    Label(PermissionMenu.label(mode), systemImage: PermissionMenu.symbol(mode)).font(.system(size: 11)).lineLimit(1)
+                    HStack(spacing: 3) {
+                        Text(PermissionMenu.label(mode)).lineLimit(1)
+                        Image(systemName: "chevron.down").font(.system(size: 8, weight: .semibold))
+                    }
+                    .font(.system(size: 11))
                 }
                 .buttonStyle(QuietButtonStyle()).foregroundStyle(mode == "bypassPermissions" ? PermissionMenu.danger : WorkbenchTheme.inkMuted)
                 .disabled(!model.isConnected).help("权限")

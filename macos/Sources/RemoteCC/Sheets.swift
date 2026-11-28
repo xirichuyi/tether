@@ -11,17 +11,16 @@ struct PermissionMenu: View {
     @State private var error = ""
     @State private var saving = false
 
-    struct Mode { let id, title, detail, symbol: String }
+    struct Mode { let id, title: String }
     static let modes = [
-        Mode(id: "default", title: "请求时确认", detail: "改文件、运行命令前先问你", symbol: "hand.raised"),
-        Mode(id: "acceptEdits", title: "自动编辑", detail: "直接改文件，运行命令前先问", symbol: "pencil.line"),
-        Mode(id: "plan", title: "计划", detail: "只读，先给方案", symbol: "list.bullet.clipboard"),
-        Mode(id: "bypassPermissions", title: "Full Access", detail: "不再询问，可执行任何操作", symbol: "exclamationmark.shield"),
+        Mode(id: "default", title: "请求时确认"),
+        Mode(id: "acceptEdits", title: "自动编辑"),
+        Mode(id: "plan", title: "计划"),
+        Mode(id: "bypassPermissions", title: "Full Access"),
     ]
     private static let others = ["dontAsk": "拒绝未授权", "auto": "自动权限"]
     static let danger = Color.orange
     static func label(_ mode: String?) -> String { modes.first { $0.id == mode }?.title ?? mode.flatMap { others[$0] } ?? "请求时确认" }
-    static func symbol(_ mode: String?) -> String { modes.first { $0.id == mode }?.symbol ?? "hand.raised" }
     static func effective(_ session: ChatSession?, remote: String?) -> String {
         session?.preferences?.permissionMode.flatMap { $0.isEmpty ? nil : $0 } ?? remote ?? "default"
     }
@@ -29,30 +28,24 @@ struct PermissionMenu: View {
     var body: some View {
         let current = Self.effective(model.active, remote: remoteMode)
         // A server default with no row of its own still needs a way back to inheriting it.
-        let unlisted = remoteMode.flatMap { remote in Self.modes.contains { $0.id == remote } ? nil : Mode(id: remote, title: Self.label(remote), detail: "远端默认", symbol: "server.rack") }
-        VStack(alignment: .leading, spacing: 2) {
+        let unlisted = remoteMode.flatMap { remote in Self.modes.contains { $0.id == remote } ? nil : Mode(id: remote, title: Self.label(remote)) }
+        VStack(alignment: .leading, spacing: 0) {
             ForEach((unlisted.map { [$0] } ?? []) + Self.modes, id: \.id) { mode in
                 Button { choose(mode.id) } label: {
-                    HStack(alignment: .firstTextBaseline, spacing: 10) {
-                        Image(systemName: mode.symbol).font(.system(size: 13)).frame(width: 18)
-                        VStack(alignment: .leading, spacing: 2) {
-                            HStack(spacing: 6) {
-                                Text(mode.title).font(.system(size: 13, weight: .medium))
-                                if mode.id == remoteMode { Text("默认").font(.system(size: 10)).foregroundStyle(WorkbenchTheme.inkMuted) }
-                            }
-                            Text(mode.detail).font(.system(size: 11)).opacity(0.7)
-                        }
-                        Spacer(minLength: 12)
-                        if mode.id == current { Image(systemName: "checkmark").font(.system(size: 12, weight: .semibold)) }
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark").font(.system(size: 10, weight: .semibold)).frame(width: 12).opacity(mode.id == current ? 1 : 0)
+                        Text(mode.title)
+                        Spacer(minLength: 16)
+                        if mode.id == remoteMode { Text("默认").foregroundStyle(WorkbenchTheme.inkMuted) }
                     }
-                    .foregroundStyle(mode.id == "bypassPermissions" ? Self.danger : WorkbenchTheme.ink)
-                    .padding(.horizontal, 10).padding(.vertical, 7).contentShape(Rectangle())
+                    .font(.system(size: 12)).foregroundStyle(WorkbenchTheme.ink)
+                    .padding(.horizontal, 8).frame(height: 24).contentShape(Rectangle())
                 }
                 .buttonStyle(PermissionRowStyle()).focusEffectDisabled().disabled(saving)
             }
-            if !error.isEmpty { Text(error).font(.caption).foregroundStyle(WorkbenchTheme.error).padding(.horizontal, 10).padding(.vertical, 4) }
+            if !error.isEmpty { Text(error).font(.system(size: 11)).foregroundStyle(WorkbenchTheme.error).padding(.horizontal, 8).padding(.vertical, 4) }
         }
-        .padding(6).frame(width: 300)
+        .padding(4).frame(width: 180)
     }
 
     private func choose(_ id: String) {
@@ -77,7 +70,7 @@ private struct PermissionRowStyle: ButtonStyle {
         @State private var hovering = false
         var body: some View {
             configuration.label
-                .background(WorkbenchTheme.ink.opacity(configuration.isPressed ? 0.08 : hovering ? 0.05 : 0), in: RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.medium))
+                .background(WorkbenchTheme.ink.opacity(configuration.isPressed ? 0.08 : hovering ? 0.05 : 0), in: RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.small))
                 .onHover { hovering = $0 }
         }
     }
