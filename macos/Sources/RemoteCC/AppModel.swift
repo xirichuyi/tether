@@ -110,6 +110,7 @@ final class AppModel: ObservableObject {
     }
 
     @Published var composerFocus = UUID()
+    @Published var permissionMenuOpen = false
     @Published var sessionToolsSection = "skills"
     private var transcriptViewports: [String: TranscriptViewport] = [:]
     func transcriptViewport(for id: String) -> TranscriptViewport {

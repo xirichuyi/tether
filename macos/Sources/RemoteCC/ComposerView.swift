@@ -6,6 +6,7 @@ import RemoteCCCore
 
 struct ComposerArea: View {
     @EnvironmentObject private var model: AppModel
+    @State private var remoteMode: String?
     @State private var editorHeight: CGFloat = 32
     @State private var caret = 0
     @State private var selection = 0
@@ -280,14 +281,26 @@ struct ComposerArea: View {
         }
     }
 
+    private func loadRemoteMode() async {
+        remoteMode = nil
+        guard model.isConnected, let engine = model.engine, let session = model.active,
+              let reply = try? await engine.agents.call(session.config, "file", ["operation": "claudeDefaults", "directory": .string(session.directory)], timeout: 10)
+        else { return }
+        if case .string(let mode)? = reply["permissionMode"] { remoteMode = mode } else { remoteMode = "default" }
+    }
+
     private var sessionControls: some View {
         let session = model.active
-        let mode = session?.preferences?.permissionMode.flatMap { $0.isEmpty ? nil : $0 }
+        let mode = PermissionMenu.effective(session, remote: remoteMode)
         let busy = session?.isBusy ?? false
         return HStack(spacing: 4) {
             if session != nil {
-                Button { model.showPreferences = true } label: { Text(mode == nil ? "远端默认" : PreferencesSheet.label(mode)).font(.system(size: 11)).lineLimit(1) }
-                    .buttonStyle(QuietButtonStyle()).foregroundStyle(WorkbenchTheme.inkMuted).disabled(!model.isConnected)
+                Button { model.showPreferences.toggle() } label: {
+                    Label(PermissionMenu.label(mode), systemImage: PermissionMenu.symbol(mode)).font(.system(size: 11)).lineLimit(1)
+                }
+                .buttonStyle(QuietButtonStyle()).foregroundStyle(mode == "bypassPermissions" ? PermissionMenu.danger : WorkbenchTheme.inkMuted)
+                .disabled(!model.isConnected).help("权限")
+                .popover(isPresented: $model.showPreferences, arrowEdge: .top) { PermissionMenu(remoteMode: remoteMode) }
                 Spacer(minLength: 2)
             }
             if session == nil { Spacer() }
@@ -313,6 +326,7 @@ struct ComposerArea: View {
             }
 
         }
+        .task(id: "\(model.active?.id ?? "")|\(model.isConnected)") { await loadRemoteMode() }
     }
 
     private func send(steer: Bool = false) {

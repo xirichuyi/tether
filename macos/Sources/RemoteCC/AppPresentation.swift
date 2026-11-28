@@ -19,7 +19,6 @@ enum AppPresentation: Identifiable {
     case members(ConnectionConfig)
     case projectPicker
     case settings
-    case preferences
     case quickOpen
     case sessionTools
     case chatGallery
@@ -42,7 +41,6 @@ enum AppPresentation: Identifiable {
         case .members(let config): return "members:" + config.key
         case .projectPicker: return "projectPicker"
         case .settings: return "settings"
-        case .preferences: return "preferences"
         case .quickOpen: return "quickOpen"
         case .sessionTools: return "sessionTools"
         case .chatGallery: return "chatGallery"
@@ -104,11 +102,8 @@ extension AppModel {
         }
     }
     var showPreferences: Bool {
-        get { presentation?.id == "preferences" }
-        set {
-            if newValue { presentation = .preferences }
-            else if showPreferences { presentation = nil }
-        }
+        get { permissionMenuOpen }
+        set { permissionMenuOpen = newValue }
     }
     var showQuickOpen: Bool {
         get { presentation?.id == "quickOpen" }
@@ -168,7 +163,6 @@ struct AppSheet: View {
             case .members(let config): MembersSheet(machine: config)
             case .projectPicker: ProjectPickerSheet()
             case .settings: SettingsSheet()
-            case .preferences: PreferencesSheet()
             case .quickOpen: QuickOpenSheet()
             case .sessionTools: SessionToolsSheet()
             case .chatGallery:

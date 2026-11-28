@@ -3,57 +3,77 @@ import SwiftUI
 import AppKit
 import RemoteCCCore
 
-/// Only the permission mode is set here; anything left alone follows the remote Claude settings.
-struct PreferencesSheet: View {
+/// Opens from the composer. Picking the server's own default stores nothing, so the chat keeps following it.
+struct PermissionMenu: View {
     @EnvironmentObject private var model: AppModel
-    private func dismiss() { model.presentation = nil }
-    @State private var remoteMode: String?
-    @State private var permissionMode = ""
+    /// The remote Claude default; nil while unknown, and then every choice is stored explicitly.
+    let remoteMode: String?
     @State private var error = ""
-    @State private var saving = false
 
-    static let modes: [(String, String)] = [("default", "请求时确认"), ("plan", "计划"), ("acceptEdits", "自动编辑"),
-                                            ("dontAsk", "拒绝未授权"), ("auto", "自动权限"), ("bypassPermissions", "Full Access")]
-    static func label(_ mode: String?) -> String { modes.first { $0.0 == mode }?.1 ?? mode ?? "请求时确认" }
+    struct Mode { let id, title, detail, symbol: String }
+    static let modes = [
+        Mode(id: "default", title: "请求时确认", detail: "改文件、运行命令前先问你", symbol: "hand.raised"),
+        Mode(id: "acceptEdits", title: "自动编辑", detail: "直接改文件，运行命令前先问", symbol: "pencil.line"),
+        Mode(id: "plan", title: "计划", detail: "只读，先给方案", symbol: "list.bullet.clipboard"),
+        Mode(id: "bypassPermissions", title: "Full Access", detail: "不再询问，可执行任何操作", symbol: "exclamationmark.shield"),
+    ]
+    private static let others = ["dontAsk": "拒绝未授权", "auto": "自动权限"]
+    static let danger = Color.orange
+    static func label(_ mode: String?) -> String { modes.first { $0.id == mode }?.title ?? mode.flatMap { others[$0] } ?? "请求时确认" }
+    static func symbol(_ mode: String?) -> String { modes.first { $0.id == mode }?.symbol ?? "hand.raised" }
+    static func effective(_ session: Session?, remote: String?) -> String {
+        session?.preferences?.permissionMode.flatMap { $0.isEmpty ? nil : $0 } ?? remote ?? "default"
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            SheetHeading(title: "权限") { dismiss() }.disabled(saving).padding(.horizontal, WorkbenchMetrics.dialogPadding).frame(height: WorkbenchMetrics.dialogHeader)
-            WorkbenchSelect(title: "权限", selection: $permissionMode, options:
-                [WorkbenchOption("", "远端默认 · " + Self.label(remoteMode ?? "default"))] +
-                Self.modes.map { WorkbenchOption($0.0, $0.1) })
-                .disabled(saving)
-                .padding(.horizontal, WorkbenchMetrics.dialogPadding)
-            HStack {
-                if !error.isEmpty { Text(error).font(.caption).foregroundStyle(WorkbenchTheme.error).fixedSize(horizontal: false, vertical: true) }
-                Spacer()
-                Button("取消") { dismiss() }.keyboardShortcut(.cancelAction)
-                Button("应用") { apply() }.buttonStyle(WorkbenchButtonStyle(prominent: true)).keyboardShortcut(.defaultAction).disabled(saving)
+        let current = Self.effective(model.active, remote: remoteMode)
+        VStack(alignment: .leading, spacing: 2) {
+            ForEach(Self.modes, id: \.id) { mode in
+                Button { choose(mode.id) } label: {
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        Image(systemName: mode.symbol).font(.system(size: 13)).frame(width: 18)
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack(spacing: 6) {
+                                Text(mode.title).font(.system(size: 13, weight: .medium))
+                                if mode.id == remoteMode { Text("默认").font(.system(size: 10)).foregroundStyle(WorkbenchTheme.inkMuted) }
+                            }
+                            Text(mode.detail).font(.system(size: 11)).opacity(0.7)
+                        }
+                        Spacer(minLength: 12)
+                        if mode.id == current { Image(systemName: "checkmark").font(.system(size: 12, weight: .semibold)) }
+                    }
+                    .foregroundStyle(mode.id == "bypassPermissions" ? Self.danger : WorkbenchTheme.ink)
+                    .padding(.horizontal, 10).padding(.vertical, 7).contentShape(Rectangle())
+                }
+                .buttonStyle(PermissionRowStyle())
             }
-            .padding()
+            if !error.isEmpty { Text(error).font(.caption).foregroundStyle(WorkbenchTheme.error).padding(.horizontal, 10).padding(.vertical, 4) }
         }
-        .frame(width: 360)
-        .task { await load() }
+        .padding(6).frame(width: 300)
     }
 
-    private func load() async {
-        guard let engine = model.engine, let session = model.active else { return }
-        let stored = session.preferences?.permissionMode ?? ""
-        permissionMode = stored
-        guard let defaults = try? await engine.agents.call(session.config, "file", ["operation": "claudeDefaults", "directory": .string(session.directory)], timeout: 10),
-              case .string(let mode)? = defaults["permissionMode"] else { return }
-        remoteMode = mode
-    }
-
-    private func apply() {
+    private func choose(_ id: String) {
         guard let engine = model.engine, let session = model.active else { return }
         var next = session.preferences ?? Preferences()
-        next.permissionMode = permissionMode.isEmpty ? nil : permissionMode
-        saving = true; error = ""
+        next.permissionMode = id == remoteMode ? nil : id
+        guard next.permissionMode != session.preferences?.permissionMode else { model.showPreferences = false; return }
+        error = ""
         Task {
-            do { try await engine.configure(session.id, next); dismiss() }
+            do { try await engine.configure(session.id, next); model.showPreferences = false }
             catch { self.error = error.localizedDescription }
-            saving = false
+        }
+    }
+}
+
+private struct PermissionRowStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View { Row(configuration: configuration) }
+    private struct Row: View {
+        let configuration: ButtonStyleConfiguration
+        @State private var hovering = false
+        var body: some View {
+            configuration.label
+                .background(WorkbenchTheme.ink.opacity(configuration.isPressed ? 0.08 : hovering ? 0.05 : 0), in: RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.medium))
+                .onHover { hovering = $0 }
         }
     }
 }
