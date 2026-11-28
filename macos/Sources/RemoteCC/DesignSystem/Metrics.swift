@@ -6,6 +6,7 @@ import SwiftUI
 enum WorkbenchMetrics {
     static let row: CGFloat = 24
     static let button: CGFloat = 28
+    static let compactButton: CGFloat = 24
     static let header: CGFloat = 40
     static let status: CGFloat = 26
     static let dialogRadius: CGFloat = 12
