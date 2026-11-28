@@ -11,12 +11,12 @@
                 choosing.toggle()
             } label: {
                 // Keep the current host visible beside its connection status.
-                HStack(spacing: 4) {
+                HStack(spacing: 3) {
                     Circle().fill(model.isConnected ? WorkbenchTheme.sage : WorkbenchTheme.inkMuted.opacity(0.5)).frame(
                         width: 6, height: 6)
                     Text(model.currentConfig?.displayName ?? "选择机器")
-                        .font(.system(size: 13.5, weight: .semibold)).lineLimit(1).truncationMode(.middle)
-                    WorkbenchIcon(symbol: "chevron.down").scaleEffect(0.7).frame(width: 12)
+                        .font(.system(size: 13, weight: .semibold)).lineLimit(1).truncationMode(.middle)
+                    WorkbenchIcon(symbol: "chevron.down").scaleEffect(0.7).frame(width: 10)
                         .foregroundStyle(WorkbenchTheme.inkMuted)
                 }
                 .frame(height: 30).contentShape(Rectangle())
