@@ -10,7 +10,8 @@ struct ChatAttachmentView: View {
     @State private var loading = false
     @State private var loadTask: Task<Void, Never>?
     @State private var error = ""
-    private var imageFile: Bool { ["png", "jpg", "jpeg", "gif", "webp", "heic"].contains((file.name as NSString).pathExtension.lowercased()) }
+    static func isImage(_ name: String) -> Bool { ["png", "jpg", "jpeg", "gif", "webp", "heic"].contains((name as NSString).pathExtension.lowercased()) }
+    private var imageFile: Bool { Self.isImage(file.name) }
     var body: some View {
         Group {
             if imageFile && (thumbnail != nil || error.isEmpty) { image } else { chip }
@@ -60,6 +61,7 @@ struct ChatAttachmentView: View {
     }
 
     private func load() {
+        if let url = model.localImages[file.path], let image = NSImage(contentsOf: url) { thumbnail = image; return }
         guard let session = model.active, let engine = model.engine else { return }
         loading = true; error = ""
         loadTask?.cancel()

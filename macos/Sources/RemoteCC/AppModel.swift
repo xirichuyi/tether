@@ -130,6 +130,7 @@ final class AppModel: ObservableObject {
     }
     @Published var drafts: [String: String] = [:]
     @Published var attachments: [String: [Attachment]] = [:]
+    var localImages: [String: URL] = [:]
     /// Diff line comments per conversation, waiting to be sent to it together.
     @Published var reviewComments: [String: [ReviewComment]] = [:]
     var activeReviewComments: [ReviewComment] { activeId.flatMap { reviewComments[$0] } ?? [] }
@@ -1133,6 +1134,7 @@ final class AppModel: ObservableObject {
             for result in results {
                 let url = result.file
                 if let attachment = result.attachment {
+                    self.localImages[attachment.path] = url
                     self.addAttachments([attachment], to: session.id)
                     self.failedUploads[session.id]?.removeAll { $0 == url }
                     self.failedUploadDirectories[session.id]?[url] = nil

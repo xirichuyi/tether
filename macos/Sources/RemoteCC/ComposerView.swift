@@ -74,7 +74,7 @@ struct ComposerArea: View {
             else if !mentions.isEmpty { mentionMenu }
             VStack(alignment: .leading, spacing: 6) {
                 attachmentChips
-                if model.uploadingSessions.contains(id) { ProgressView("正在上传附件…").controlSize(.small).font(.caption) }
+                if model.uploadingSessions.contains(id) { ProgressView().controlSize(.small) }
                 ForEach(model.failedUploads[id] ?? [], id: \.self) { url in
                     HStack {
                         Label(url.lastPathComponent + " 上传失败", systemImage: "exclamationmark.circle").lineLimit(1)
@@ -226,17 +226,35 @@ struct ComposerArea: View {
         }
     }
 
+    private func removeButton(_ file: Attachment) -> some View {
+        Button { model.attachments[id]?.removeAll { $0.path == file.path } } label: {
+            Image(systemName: "xmark.circle.fill").font(.system(size: 14)).symbolRenderingMode(.palette)
+                .foregroundStyle(.white, WorkbenchTheme.ink.opacity(0.7))
+        }
+        .buttonStyle(.plain).help("移除")
+    }
+
     @ViewBuilder private var attachmentChips: some View {
         if let files = model.attachments[id], !files.isEmpty {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack {
                     ForEach(files) { file in
-                        HStack(spacing: 5) {
-                            Button(file.name) { model.open(file.path) }.buttonStyle(.plain).help(file.path)
-                            Button { model.attachments[id]?.removeAll { $0.path == file.path } } label: { WorkbenchIcon(symbol: "xmark") }.buttonStyle(.plain).help("移除附件")
+                        if ChatAttachmentView.isImage(file.name), let url = model.localImages[file.path], let image = NSImage(contentsOf: url) {
+                            Button { model.open(file.path) } label: {
+                                Image(nsImage: image).resizable().scaledToFill().frame(width: 48, height: 48)
+                                    .clipShape(RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.small))
+                            }
+                            .buttonStyle(.plain).help(file.name)
+                            .overlay(alignment: .topTrailing) { removeButton(file).offset(x: 5, y: -5) }
+                            .padding(.top, 5).padding(.trailing, 5)
+                        } else {
+                            HStack(spacing: 5) {
+                                Button(file.name) { model.open(file.path) }.buttonStyle(.plain).lineLimit(1).truncationMode(.middle).help(file.path)
+                                removeButton(file)
+                            }
+                            .font(.caption).padding(.horizontal, 7).padding(.vertical, 4)
+                            .background(WorkbenchTheme.inkMuted.opacity(0.1), in: RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.small))
                         }
-                        .font(.caption).padding(.horizontal, 7).padding(.vertical, 4)
-                        .background(WorkbenchTheme.inkMuted.opacity(0.1), in: RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.small))
                     }
                 }
             }
