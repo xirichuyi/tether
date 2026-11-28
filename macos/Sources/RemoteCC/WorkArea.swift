@@ -102,17 +102,8 @@ struct WorkArea: View {
 
     private func conversationHeader(hasEditor: Bool) -> some View {
         HStack(spacing: 8) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(model.active.map { historyDisplayTitle($0.name) } ?? "新对话")
-                    .font(.system(size: 13, weight: .semibold)).lineLimit(1)
-                if let session = model.active,
-                   session.isBusy || session.runningBackgroundTaskCount > 0 || session.transportError != nil {
-                    Button { model.showActivity = true } label: {
-                        Text(model.activityLabel(session)).font(.system(size: 10))
-                    }.buttonStyle(.plain).foregroundStyle(WorkbenchTheme.inkMuted)
-                        .help("查看远端任务")
-                }
-            }
+            Text(model.active.map { historyDisplayTitle($0.name) } ?? "新对话")
+                .font(.system(size: 13, weight: .semibold)).lineLimit(1)
             Spacer(minLength: 4)
             if let count = model.activeWorkspace?.gitStatus?.files.count, count > 0 {
                 Button {

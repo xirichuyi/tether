@@ -331,10 +331,10 @@ struct ComposerArea: View {
                 contextMeter(session)
                 if busy && canSend {
                     Button { send(steer: true) } label: { WorkbenchIcon(symbol: "arrow.turn.right.up") }
-                        .buttonStyle(ComposerActionStyle())
+                        .buttonStyle(WorkbenchIconButtonStyle(size: 28))
                         .help("立即发送 · ⌘ Enter").accessibilityLabel("立即发送")
                     Button { send() } label: { WorkbenchIcon(symbol: "text.badge.plus") }
-                        .buttonStyle(ComposerActionStyle())
+                        .buttonStyle(WorkbenchIconButtonStyle(size: 28))
                         .help("加入队列 · Enter · 回复完成后发送").accessibilityLabel("加入队列")
                 }
                 // Esc is this button's key equivalent, so it stops the reply wherever the focus is.
