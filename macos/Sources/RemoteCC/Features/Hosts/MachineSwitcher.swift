@@ -19,7 +19,7 @@
                     WorkbenchIcon(symbol: "chevron.down").scaleEffect(0.7).frame(width: 12)
                         .foregroundStyle(WorkbenchTheme.inkMuted)
                 }
-                .padding(.horizontal, 4).frame(height: 30).contentShape(Rectangle())
+                .frame(height: 30).contentShape(Rectangle())
             }
             .buttonStyle(QuietButtonStyle(height: 30))
             .help("当前机器：" + (model.currentConfig?.displayName ?? "未连接") + " · 切换或添加机器")
