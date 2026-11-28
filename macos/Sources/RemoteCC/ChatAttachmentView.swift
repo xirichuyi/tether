@@ -61,7 +61,7 @@ struct ChatAttachmentView: View {
     }
 
     private func load() {
-        if let url = model.localImages[file.path], let image = NSImage(contentsOf: url) { thumbnail = image; return }
+        if let image = model.localImages[file.path] { thumbnail = image; return }
         guard let session = model.active, let engine = model.engine else { return }
         loading = true; error = ""
         loadTask?.cancel()

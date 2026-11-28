@@ -239,7 +239,7 @@ struct ComposerArea: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack {
                     ForEach(files) { file in
-                        if ChatAttachmentView.isImage(file.name), let url = model.localImages[file.path], let image = NSImage(contentsOf: url) {
+                        if let image = model.localImages[file.path] {
                             Button { model.open(file.path) } label: {
                                 Image(nsImage: image).resizable().scaledToFill().frame(width: 48, height: 48)
                                     .clipShape(RoundedRectangle(cornerRadius: WorkbenchTheme.Radius.small))
