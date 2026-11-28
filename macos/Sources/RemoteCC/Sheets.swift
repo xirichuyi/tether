@@ -21,7 +21,7 @@ struct PermissionMenu: View {
     static let danger = Color.orange
     static func label(_ mode: String?) -> String { modes.first { $0.id == mode }?.title ?? mode.flatMap { others[$0] } ?? "请求时确认" }
     static func symbol(_ mode: String?) -> String { modes.first { $0.id == mode }?.symbol ?? "hand.raised" }
-    static func effective(_ session: Session?, remote: String?) -> String {
+    static func effective(_ session: ChatSession?, remote: String?) -> String {
         session?.preferences?.permissionMode.flatMap { $0.isEmpty ? nil : $0 } ?? remote ?? "default"
     }
 
