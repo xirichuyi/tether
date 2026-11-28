@@ -45,7 +45,7 @@ struct PermissionMenu: View {
                     .foregroundStyle(mode.id == "bypassPermissions" ? Self.danger : WorkbenchTheme.ink)
                     .padding(.horizontal, 10).padding(.vertical, 7).contentShape(Rectangle())
                 }
-                .buttonStyle(PermissionRowStyle())
+                .buttonStyle(PermissionRowStyle()).focusEffectDisabled()
             }
             if !error.isEmpty { Text(error).font(.caption).foregroundStyle(WorkbenchTheme.error).padding(.horizontal, 10).padding(.vertical, 4) }
         }
