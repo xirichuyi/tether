@@ -16,7 +16,7 @@ struct WorkArea: View {
         GeometryReader { geometry in
             let workspace = model.activeWorkspace
             let hasEditor = workspace?.activeTab != nil
-            let split = splitEditor && hasEditor && geometry.size.width >= 720
+            let split = splitEditor && hasEditor && geometry.size.width >= 640
             let chatVisible = split || model.showingChat || !hasEditor
             let minimum = min(0.5, 300 / max(1, geometry.size.width - 6))
             let fraction = min(1 - minimum, max(minimum, splitFraction))
